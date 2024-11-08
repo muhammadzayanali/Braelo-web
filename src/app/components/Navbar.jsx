@@ -18,7 +18,10 @@ const NavBar = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (settingsDropdownRef.current && !settingsDropdownRef.current.contains(event.target)) {
+      if (
+        settingsDropdownRef.current &&
+        !settingsDropdownRef.current.contains(event.target)
+      ) {
         setSettingsDropdownOpen(false);
       }
     };
@@ -57,8 +60,11 @@ const NavBar = () => {
               </div>
               {settingsDropdownOpen && (
                 <div className="absolute top-full right-0 bg-gray-100 text-black rounded-lg shadow-lg z-20 w-40 mt-2">
-                  <div className="px-4 py-2  cursor-pointer" onClick={() => router.push("/FAQ")}>
-                    FAQ's
+                  <div
+                    className="px-4 py-2 cursor-pointer"
+                    onClick={() => router.push("/FAQ")}
+                  >
+                    FAQ&rsquo;s
                   </div>
                   <div
                     className="px-4 py-2 cursor-pointer"
