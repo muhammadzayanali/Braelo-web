@@ -25,7 +25,7 @@ const DashboardCards = () => {
   ];
 
   return (
-    <div className="mt-5">
+    <div className="mt-5 p-5">
       <h1 className="text-[#78828A] text-[24px] font-[500] flex items-center">
         Dashboard
       </h1>
@@ -39,8 +39,8 @@ const DashboardCards = () => {
               <Image
                 src={card.img} 
                 alt="image"
-                width={64} 
-                height={64} 
+                width={40} 
+                height={40} 
                 className="bg-[#EE9E03] p-2 rounded-full flex items-center"
               />
               <h5 className="text-center text-[16px]  font-semibold tracking-tight text-[#495057] flex items-center">

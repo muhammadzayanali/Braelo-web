@@ -60,14 +60,14 @@ const NavBar = () => {
               </div>
               {settingsDropdownOpen && (
                 <div className="absolute top-full right-0 bg-gray-100 text-black rounded-lg shadow-lg z-20 w-40 mt-2">
-                  <div
+                  {/* <div
                     className="px-4 py-2 cursor-pointer"
                     onClick={() => router.push("/FAQ")}
                   >
                     FAQ&rsquo;s
-                  </div>
+                  </div> */}
                   <div
-                    className="px-4 py-2 cursor-pointer"
+                    className="px-4 py-2 cursor-pointertext-white hover: hover:"
                     onClick={() => router.push("/pages/adminprofile")}
                   >
                     Profile Setting

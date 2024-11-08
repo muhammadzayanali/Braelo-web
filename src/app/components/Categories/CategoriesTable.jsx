@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { CategoriesData } from "./CategoriesData";
 import { getHeaderStyle } from "../Users/UserData";
 import { getBodyStyle } from "../Users/UserData";
+import EditModal from "./EditModal";
 const CategoriesTable = () => {
   const [categories, setCategories] = useState(
     CategoriesData.map((category) => ({ ...category, isSelected: false }))
@@ -26,8 +27,6 @@ const CategoriesTable = () => {
       name: category.name,
       subcategories: JSON.stringify(category.subcategories),
     };
-    const queryString = new URLSearchParams(subcategoriesData).toString();
-
     router.push(`/pages/categories/${category.id}/subcategories`);
   };
 
@@ -148,8 +147,8 @@ const CategoriesTable = () => {
 
   return (
     <div className="p-4">
-      {/* {isEditModalOpen && (
-        <EditCategoryModal
+      {isEditModalOpen && (
+        <EditModal
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
           subcategory={selectedCategory}
@@ -162,7 +161,7 @@ const CategoriesTable = () => {
             closeEditModal();
           }}
         />
-      )} */}
+      )}
 
       <DataTable value={categories} paginator rows={10} className="p-datatable">
         <Column

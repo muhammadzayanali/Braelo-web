@@ -42,22 +42,24 @@ const ListingCard = ({
         </div>
         <div>{toggle}</div>
         <p className="text-[#78828A] text-[18px] font-[700] mt-2">{price}</p>
-        <p className="text-[#78828A] text-[12px] font-[500] mt-2">{description}</p>
+        <p className="text-[#78828A] text-[12px] font-[500] mt-2">
+          {description}
+        </p>
       </div>
 
       {/* Stats Section */}
-      <div className="flex gap-4 mt-3">
-        <div className="flex items-center">
-          <Image src="/e1.png" alt="views" width={16} height={16} />
-          <p className="text-[#9D9D9D] text-[12px] font-[300]">1200 Views</p>
+      <div className="flex gap-2  mt-3">
+        <div className="flex items-center w-[120px]">
+          <Image src="/e1.png" alt="views" width={10} height={10} />
+          <p className="text-[#9D9D9D] text-[12px] font-[300]">120 Views</p>
         </div>
-        <div className="flex items-center">
-          <Image src="/e2.png" alt="saves" width={16} height={16} />
-          <p className="text-[#9D9D9D] text-[12px] font-[300]">1000 Saves</p>
+        <div className="flex items-center w-[120px]">
+          <Image src="/e2.png" alt="saves" width={10} height={10} />
+          <p className="text-[#9D9D9D] text-[12px] font-[300]">100 Saves</p>
         </div>
-        <div className="flex items-center">
-          <Image src="/e3.png" alt="clicks" width={16} height={16} />
-          <p className="text-[#9D9D9D] text-[12px] font-[300]">2000 Clicks</p>
+        <div className="flex items-center w-[120px]">
+          <Image src="/e3.png" alt="clicks" width={10} height={10} />
+          <p className="text-[#9D9D9D] text-[12px] font-[300]">200 Clicks</p>
         </div>
       </div>
     </div>

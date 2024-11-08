@@ -32,7 +32,7 @@ const ReportedUser = () => {
                   height={24} // Adjust height as needed
                   className="absolute left-3"
                 />
-                a
+                
                 <span className="text-[#75818D] text-[14px]  font-[400]">
                   Export
                 </span>
