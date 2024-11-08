@@ -62,21 +62,21 @@ const ImageSection = () => {
       <div className="absolute inset-0 flex items-center justify-end">
         <Image
           src="/images/2.png" // Use relative paths for images
-          alt=""
+          alt="login1"
           className="absolute right-[50px] top-0 max-h-full h-full object-cover"
           width={500} // Adjust width as necessary
           height={500} // Adjust height as necessary
         />
         <Image
           src="/images/3.png"
-          alt=""
+          alt="login2"
           className="absolute right-[25px] top-0 max-h-full h-full object-cover"
           width={500}
           height={500}
         />
         <Image
           src="/images/1.png"
-          alt=""
+          alt="login3"
           className="absolute right-0 top-0 max-h-full h-full rounded-lg object-cover"
           width={500}
           height={500}

@@ -48,6 +48,7 @@ const BusinessHeader = () => {
               src="/b4.png"
               className="cursor-pointer"
               onClick={handleNewBusiness}
+              alt="addbusniess"
             />
             <div>
             </div>

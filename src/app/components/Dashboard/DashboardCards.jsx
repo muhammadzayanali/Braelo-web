@@ -40,6 +40,7 @@ const DashboardCards = () => {
               <img
                 src={card.img}
                 className="bg-[#EE9E03] p-2   rounded-full flex items-center"
+                alt="image"
               />
                 <h5 className="text-center text-[16px]  font-semibold tracking-tight text-[#495057] flex items-center">
                   {card.title}

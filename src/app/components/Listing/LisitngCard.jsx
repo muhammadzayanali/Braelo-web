@@ -20,7 +20,7 @@ const ListingCard = ({
           <img
             key={index}
             src={icon}
-            alt=""
+            alt="icons"
             className="w-6 h-6 cursor-pointer"
             onClick={() => onIconClick(icon)} // Trigger the onIconClick with the icon path
           />
