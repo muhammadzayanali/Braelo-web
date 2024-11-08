@@ -5,11 +5,9 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { useRouter } from "next/navigation";
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
-import Modal from "../Modal";
 
 export default function ReportsTable() {
   const [reports, setReports] = useState([]);
-  const[OpenModal,setOpenmodal] = useState(false)
   const router = useRouter();
 
   const sampleData = [
@@ -115,7 +113,7 @@ export default function ReportsTable() {
       if (action === "view") {
         // router.push("/Reportdetail"); // Next.js navigation
       } else if (action === "delete") {
-        alert(`Are you sure delete this request ${userId}`);
+        alert(`Are you sure delete this request, ${userId}`);
       }
     };
 

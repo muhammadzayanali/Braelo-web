@@ -164,7 +164,7 @@ export default function BussniessTable() {
   const ImageLogo = () => {
     return (
       <div>
-        <img src="/b5.png" alt="logo" />
+        <Image src="/b5.png" alt="logo" width={30} height={30} />
       </div>
     );
   };

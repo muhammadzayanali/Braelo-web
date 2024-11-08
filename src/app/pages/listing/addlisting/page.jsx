@@ -4,6 +4,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
+import BackButton from "@/app/components/BackButton";
 
 const AddNewListing = () => {
   const [imagePreview, setImagePreview] = useState(null);
@@ -68,9 +70,7 @@ const AddNewListing = () => {
   return (
     <form onSubmit={formik.handleSubmit} className="p-6 bg-white border rounded shadow-md">
       <div className="flex items-center gap-2 mb-4">
-        <button onClick={() => router.back()} className="bg-gray-300 p-2 rounded-lg text-gray-700">
-          ← Back
-        </button>
+       <BackButton/>
         <h1 className="text-[#78828A] text-[24px] font-[500]">Create New Listing</h1>
       </div>
 
@@ -100,7 +100,7 @@ const AddNewListing = () => {
           accept="image/*"
         />
         {imagePreview && (
-          <img src={imagePreview} alt="Preview" className="mt-2 w-32 h-32 object-cover" />
+          <Image src={imagePreview} alt="Preview" className="mt-2 w-32 h-32 object-cover" width={40} height={40} />
         )}
       </div>
 

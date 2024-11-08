@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "../BackButton";
+import Image from "next/image";
 
 const options = [
   { value: "option1", label: "CSV" },
@@ -44,11 +45,14 @@ const BusinessHeader = () => {
         </div>
         <div className="flex justify-between py-4 items-center">
           <div className="flex gap-2">
-            <img
+            <Image
               src="/b4.png"
               className="cursor-pointer"
               onClick={handleNewBusiness}
               alt="addbusniess"
+              width={50}
+              height={50}
+
             />
             <div>
             </div>
@@ -59,10 +63,12 @@ const BusinessHeader = () => {
                   onClick={() => setIsOpen(!isOpen)}
                   className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm pl-10 pr-2 py-2 cursor-pointer focus:outline-none"
                 >
-                  <img
+                  <Image
                     src="/images/export.png"
                     alt="export icon"
-                    className="absolute left-3 w-6 h-6"
+                    className="absolute left-3"
+                    width={24}
+                    height={24}
                   />
                   <span className="text-[#75818D] text-[14px]  font-[400]">
                     Export
@@ -126,10 +132,7 @@ const BusinessHeader = () => {
             placeholder="Search By Name"
             className="block w-full pl-4 pr-10 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
           />
-          {/* Search Icon */}
-          {/* <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <img src="Seacrh (1).png" alt="Search" />
-          </div> */}
+
         </div>
         <div className="relative">
           {/* Date Input Field */}
