@@ -1,8 +1,7 @@
-
 import React from "react";
+import Image from "next/image";
 
 const DashboardCards = () => {
-
   const cardData = [
     {
       id: 1,
@@ -37,14 +36,16 @@ const DashboardCards = () => {
             className=" p-6 bg-[#feefcb] border border-gray-100 rounded-lg shadow"
           >
             <div className="flex gap-5">
-              <img
-                src={card.img}
-                className="bg-[#EE9E03] p-2   rounded-full flex items-center"
+              <Image
+                src={card.img} 
                 alt="image"
+                width={64} 
+                height={64} 
+                className="bg-[#EE9E03] p-2 rounded-full flex items-center"
               />
-                <h5 className="text-center text-[16px]  font-semibold tracking-tight text-[#495057] flex items-center">
-                  {card.title}
-                </h5>
+              <h5 className="text-center text-[16px]  font-semibold tracking-tight text-[#495057] flex items-center">
+                {card.title}
+              </h5>
             </div>
           </div>
         ))}

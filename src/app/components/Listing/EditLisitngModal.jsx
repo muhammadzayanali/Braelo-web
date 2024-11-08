@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 
 const EditListingModal = ({ isOpen, onClose, card }) => {
   const [formData, setFormData] = useState({
@@ -73,10 +74,12 @@ const EditListingModal = ({ isOpen, onClose, card }) => {
         </button>
 
         <h2 className="text-xl font-semibold mb-4">Edit Listing</h2>
-        <img
-          src={formData.image}
-          alt={formData.title}
-          className="w-full h-40 object-cover mb-4"
+        <Image
+          src={formData.image} // Dynamic image source from formData
+          alt={formData.title} // Alt text using formData.title
+          width={100} // Set a width for the image
+          height={100} // Set a height for the image
+          className="w-full h-40 object-cover mb-4" // Tailwind CSS classes for styling
         />
 
         <div className="mt-4">

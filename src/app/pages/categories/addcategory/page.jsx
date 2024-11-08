@@ -4,6 +4,7 @@ import React from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import BackButton from "@/app/components/BackButton";
+import Image from "next/image";
 
 const AddCategory = () => {
   const formik = useFormik({
@@ -55,7 +56,7 @@ const AddCategory = () => {
         <div className="flex items-center gap-2">
           <BackButton />
           <h1 className="text-[#78828A] text-[24px] font-[500]">
-0            Add Category
+            0 Add Category
           </h1>
         </div>
         <div className="mb-4">
@@ -94,10 +95,12 @@ const AddCategory = () => {
             <div className="text-red-600">{formik.errors.image}</div>
           ) : null}
           {formik.values.imagePreview && (
-            <img
+            <Image
               src={formik.values.imagePreview}
               alt="Preview"
-              className="mt-2 w-32 h-32 object-cover"
+              width={128} // Adjust width as needed (32 * 4)
+              height={128} // Adjust height as needed (32 * 4)
+              className="mt-2 object-cover"
             />
           )}
         </div>

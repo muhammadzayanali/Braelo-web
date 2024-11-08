@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup"; // For validation
 import BackButton from "@/app/components/BackButton";
+import Image from "next/image";
 
 const AddNewBusiness = () => {
   const [loading, setLoading] = useState(false);
@@ -65,11 +66,11 @@ const AddNewBusiness = () => {
   return (
     <div className="p-5">
       <div className="flex items-center gap-2">
-        <BackButton/>
-     
-      <h1 className="text-[#78828A] text-[24px] font-[500]">
-        Add New Business
-      </h1>
+        <BackButton />
+
+        <h1 className="text-[#78828A] text-[24px] font-[500]">
+          Add New Business
+        </h1>
       </div>
       <div className="p-5">
         <form onSubmit={formik.handleSubmit}>
@@ -106,17 +107,21 @@ const AddNewBusiness = () => {
               ) : (
                 <>
                   {imagePreview ? (
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="preview"
+                      width={500}
+                      height={288}
                       className="w-full h-72 object-cover rounded-lg"
                     />
                   ) : (
                     <div>
-                      <img
+                      <Image
                         src="/b6.png"
                         alt="filesicon"
                         onClick={handleIconClick}
+                        width={24}
+                        height={24}
                         className="cursor-pointer"
                       />
                       <input

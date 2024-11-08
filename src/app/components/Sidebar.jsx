@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 const sidebarItems = [
   { to: "/pages/dashboard", icon: "/a1.png", label: "Dashboard" },
@@ -33,12 +34,19 @@ const Sidebar = () => {
         <div className="w-full">
           {/* Logo Section */}
           <div className="bg-[#FFCC35] flex justify-center p-8">
-            <img src="/black logo.png" className="hidden md:block" alt="Logo" />
-            <img
+            <Image
+              src="/black logo.png"
+              alt="Logo"
+              width={200}
+              height={50}
+              className="hidden md:block"
+            />
+            <Image
               src="/faveicon.svg"
-              className="block md:hidden"
-              width="24px"
               alt="Favicon"
+              width={24}
+              height={24}
+              className="block md:hidden"
             />
           </div>
 
@@ -47,10 +55,12 @@ const Sidebar = () => {
             {sidebarItems.map((item) => (
               <Link key={item.label} href={item.to} passHref>
                 <div className={getTabClass(item.to)}>
-                  <img
+                  <Image
                     src={item.icon}
                     alt={item.label}
-                    className="w-6 h-6 mr-2"
+                    width={24}
+                    height={24}
+                    className="mr-2"
                   />
                   <span className="text-white">{item.label}</span>
                 </div>

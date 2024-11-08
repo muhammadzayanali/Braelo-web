@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { CategoriesData } from "./CategoriesData";
 import BackButton from "../BackButton";
+import Image from "next/image";
 
 const SubcategoriesTable = () => {
   const { id } = useParams(); // Get category ID from URL
@@ -91,10 +92,10 @@ const SubcategoriesTable = () => {
     <div className="p-5">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-         <BackButton />
-        <h1 className="text-[#78828A] text-[24px] font-[500]">
-          {category?.name || "Subcategories"}
-        </h1>
+          <BackButton />
+          <h1 className="text-[#78828A] text-[24px] font-[500]">
+            {category?.name || "Subcategories"}
+          </h1>
         </div>
         <button
           className="px-4 py-2 bg-[#CD9403] text-white rounded-lg"
@@ -152,10 +153,12 @@ const SubcategoriesTable = () => {
                   </td>
                   <td className="p-3">{subcategory.id}</td>
                   <td className="p-3">
-                    <img
+                    <Image
                       src={subcategory.image}
                       alt={subcategory.name}
-                      className="w-16 h-16 object-cover rounded border p-2"
+                      width={64} // Setting width
+                      height={64} // Setting height
+                      className="object-cover rounded border p-2"
                     />
                   </td>
                   <td className="p-3 font-medium">{subcategory.name}</td>

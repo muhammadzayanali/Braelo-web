@@ -4,6 +4,7 @@ import ChatModal from "@/app/components/ChatModal";
 import EditUserdetailModal from "@/app/components/Users/EditUserdetailModal";
 import ListingTabbar from "@/app/components/Listing/ListingTabbar";
 import BackButton from "@/app/components/BackButton";
+import Image from "next/image";
 
 const Userdetail = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -25,10 +26,12 @@ const Userdetail = () => {
             </div>
             <div className="relative">
               <div className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm pl-10 pr-2 py-2 cursor-pointer focus:outline-none">
-                <img
+                <Image
                   src="/images/export.png"
                   alt="export icon"
-                  className="absolute left-3 w-6 h-6"
+                  width={24} // Adjust width as needed (w-6 = 24px)
+                  height={24} // Adjust height as needed (h-6 = 24px)
+                  className="absolute left-3"
                 />
                 <span className="text-[#75818D] text-[14px] font-plus font-[400]">
                   Download
@@ -46,19 +49,31 @@ const Userdetail = () => {
           </div>
 
           <div className="flex gap-2">
-            <img
+            <Image
               src="/b2.png"
               alt="button1"
               className="cursor-pointer"
               onClick={() => setModalOpen(true)}
+              width={45} // Adjust width as needed
+              height={10}
             />
-            <img
+
+            <Image
               src="/b1.png"
               alt="button2"
               className="cursor-pointer"
               onClick={OpeModal}
+              width={45} // Adjust width as needed
+              height={10} // Adjust height as needed
             />
-            <img src="/b3.png" alt="button3" className="cursor-pointer" />
+
+            <Image
+              src="/b3.png"
+              alt="button3"
+              className="cursor-pointer"
+              width={35} // Adjust width as needed
+              height={10}  // Adjust height as needed
+            />
           </div>
           <ChatModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
           <EditUserdetailModal

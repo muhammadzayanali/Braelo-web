@@ -5,6 +5,7 @@ import ListingTabbar from "@/app/components/Listing/ListingTabbar";
 import ChatModal from "@/app/components/ChatModal";
 import EditdetailsModal from "@/app/components/Business/EditdetailsModal";
 import BackButton from "@/app/components/BackButton";
+import Image from "next/image";
 
 const BusinessDetails = () => {
   const router = useRouter();
@@ -28,10 +29,12 @@ const BusinessDetails = () => {
             </div>
             <div className="relative">
               <div className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm pl-10 pr-2 py-2 cursor-pointer focus:outline-none">
-                <img
+                <Image
                   src="/images/export.png"
                   alt="export icon"
-                  className="absolute left-3 w-6 h-6"
+                  width={24}
+                  height={24}
+                  className="absolute left-3"
                 />
                 <span className="text-[#75818D] text-[14px] font-plus font-[400]">
                   Download Export
@@ -45,26 +48,41 @@ const BusinessDetails = () => {
         <div className="flex justify-between mt-5">
           <div className="flex gap-2 items-center ">
             <div className="bg-[#FFCC35] px-2 py-2 rounded-full">
-              <img src="/c1.png" alt="braeloLogo" className="f" />
+              <Image
+                src="/c1.png"
+                alt="braeloLogo"
+                width={30} // Adjust width as needed
+                height={30} // Adjust height as needed
+              />{" "}
             </div>
             <h1 className="text-[#75818D] text-[18px] font-[700] font-plus ">
               Braelo
             </h1>
           </div>
           <div className="flex gap-2">
-            <img
+            <Image
               src="/b2.png"
               alt="button1"
               className="cursor-pointer"
               onClick={handleopen}
+              width={45} // Adjust width as needed
+              height={24} // Adjust height as needed
             />
-            <img
+            <Image
               src="/b1.png"
               alt="button2"
               className="cursor-pointer"
               onClick={handleEditOpen}
+              width={45} // Adjust width as needed
+              height={24} // Adjust height as needed
             />
-            <img src="/b3.png" alt="button3" className="cursor-pointer" />
+            <Image
+              src="/b3.png"
+              alt="button3"
+              className="cursor-pointer"
+              width={35} // Adjust width as needed
+              height={24} // Adjust height as needed
+            />
             <ChatModal isOpen={OpeModal} onClose={handleclose} />
             <EditdetailsModal isOpen={EditModal} onClose={handleEditClose} />
           </div>
@@ -73,14 +91,29 @@ const BusinessDetails = () => {
       <div className="p-5 border-b">
         <div className="flex gap-3">
           <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <img src="/b6.png" alt="businessImage" />
+            <Image
+              src="/b6.png"
+              alt="businessImage"
+              width={100} // Adjust width as needed
+              height={100} // Adjust height as needed
+            />
           </div>
           <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <img src="/b6.png" alt="businessImage" />
+            <Image
+              src="/b6.png"
+              alt="businessImage"
+              width={100} // Adjust width as needed
+              height={100} // Adjust height as needed
+            />
           </div>
 
           <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <img src="/b6.png" alt="businessImage" />
+            <Image
+              src="/b6.png"
+              alt="businessImage"
+              width={100} // Adjust width as needed
+              height={100} // Adjust height as needed
+            />
           </div>
         </div>
 

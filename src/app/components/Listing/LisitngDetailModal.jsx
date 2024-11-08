@@ -1,5 +1,6 @@
 // Modal.js
 import React from "react";
+import Image from "next/image";
 
 const LisitngDetailModal = ({ isOpen, closeModal, title, children }) => {
   if (!isOpen) return null; // Don't render the modal if it's not open
@@ -17,7 +18,13 @@ const LisitngDetailModal = ({ isOpen, closeModal, title, children }) => {
 
         {/* Modal Title */}
         <div>
-          <img src="/img1.png" alt="Lisitng-image" className="w-[100%] mt-20"></img>
+          <Image
+            src="/img1.png"
+            alt="Listing-image" 
+            width={100} 
+            height={100}
+            className="w-full mt-20" 
+          />
           <div>
             <h1 className="text-[#101828] text-[30px] font-[600] w-56 ">
               Land Crouser Full option
