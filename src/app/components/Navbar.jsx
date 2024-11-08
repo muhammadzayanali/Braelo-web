@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FiSettings } from "react-icons/fi";
 
-const NavaBar = () => {
+const NavBar = () => {
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false); // State for settings dropdown
   const settingsDropdownRef = useRef(null); // Ref for dropdown
   const router = useRouter();
@@ -111,4 +111,4 @@ const NavaBar = () => {
   );
 };
 
-export default NavaBar;
+export default NavBar;
