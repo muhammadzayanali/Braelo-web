@@ -3,7 +3,7 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 
-function page() {
+function Subcatogory() {
     const params = useParams();
     const {id} = params;
 
@@ -15,4 +15,4 @@ function page() {
   )
 }
 
-export default page
+export default Subcatogory;
