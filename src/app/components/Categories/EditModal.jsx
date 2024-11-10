@@ -1,6 +1,8 @@
 "use client";
+
 import React, { useState } from "react";
 import Image from "next/image";
+
 const EditModal = ({
   isOpen,
   onClose,
@@ -8,10 +10,12 @@ const EditModal = ({
   onSubmit,
   isSubcategoryModal,
 }) => {
-  if (!isOpen) return null;
-
+  // Define useState outside the conditional block
   const [formData, setFormData] = useState(subcategory);
   const [selectedImage, setSelectedImage] = useState(null);
+
+  // Conditionally return null if the modal is not open
+  if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;

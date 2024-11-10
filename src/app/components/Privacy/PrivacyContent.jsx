@@ -86,7 +86,6 @@ const PrivacyContent = () => {
 
       <div className="mt-5 flex justify-end  w-11/12">
         <button className="border px-6 py-2 rounded-md text-white bg-gray-400 flex items-center">
-          <img src="./btncopy.svg" alt="" className="mr-4" />
           Paste text
         </button>
 

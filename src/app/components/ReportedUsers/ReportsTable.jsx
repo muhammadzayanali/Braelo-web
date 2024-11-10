@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { useRouter } from "next/navigation";
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
 
 export default function ReportsTable() {
   const [reports, setReports] = useState([]);
-  const router = useRouter();
 
   const sampleData = [
     {
@@ -106,7 +104,8 @@ export default function ReportsTable() {
 
   useEffect(() => {
     setReports(sampleData);
-  }, []);
+  }, [sampleData]); // Include `sampleData` if it may change
+  
 
   const actionBodyTemplate = (rowData) => {
     const handleAction = (userId, action) => {

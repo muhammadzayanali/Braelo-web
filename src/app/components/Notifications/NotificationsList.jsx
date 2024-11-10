@@ -1,4 +1,6 @@
+"use client";
 import React, { useState } from "react";
+import Image from "next/image";
 
 // Sample Notification Data with Image and Description
 const initialNotifications = [
@@ -70,10 +72,12 @@ const NotificationsList = () => {
               className="bg-white p-4 rounded-lg shadow-md flex justify-between items-start"
             >
               <div className="flex items-center space-x-4">
-                <img
+                <Image
                   src={notification.image}
                   alt="Notification"
-                  className="w-12 h-12 rounded"
+                  className="rounded"
+                  width={40}
+                  height={40}
                 />
                 <div>
                   <h3 className="text-lg font-semibold">
