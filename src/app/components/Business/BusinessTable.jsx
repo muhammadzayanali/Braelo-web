@@ -15,6 +15,12 @@ export default function BussniessTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [rows, setRows] = useState(5);
+  const onPage = (event) => {
+    setFirst(event.first); // Update starting row for current page
+    setRows(event.rows); // Update rows per page if changed
+  };
 
   useEffect(() => {
     setData(BusniessData);
@@ -170,19 +176,21 @@ export default function BussniessTable() {
   };
 
   return (
-    <div className="p-5">
-      <div className="flex justify-content-center align-items-center mb-4 gap-2"></div>
-      <div className="table-scroll-wrapper">
+    <div className="p-5 table-scroll-wrapper">
         <DataTable
           value={data}
           dataKey="ID"
           paginator
-          rows={20}
+          first={first} // Controlled pagination
+          rows={rows}
+          onPage={onPage}
+          scrollHeight="400px"
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Showing 1 to 10 of 50 entries"
           tableStyle={{ minWidth: "200rem" }}
-          // Update state on selection change
+          className="custom-paginator" 
+          
         >
           <Column
             header={headerCheckbox()}
@@ -314,6 +322,5 @@ export default function BussniessTable() {
           />
         </DataTable>
       </div>
-    </div>
   );
 }

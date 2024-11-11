@@ -31,3 +31,42 @@ scroll-behavior: auto;
 .no-scroll {
   overflow: hidden;
 }
+.admin-panel {
+  background-color: #ffffff !important; /* Light background */
+  color: #333333 !important; /* Dark text */
+}
+.custom-paginator .p-paginator {
+  padding: 10px;
+  margin-top: 5px;
+}
+.custom-paginator .p-paginator .p-paginator-page {
+  margin: 0 0.25rem; /* Adjust spacing between page numbers */
+}
+
+.custom-paginator .p-paginator .p-paginator-page,
+.custom-paginator .p-paginator .p-paginator-first,
+.custom-paginator .p-paginator .p-paginator-prev,
+.custom-paginator .p-paginator .p-paginator-next,
+.custom-paginator .p-paginator .p-paginator-last {
+  background-color: #D9D9D9; /* Button background color */
+  color: #596068; /* Button text color */
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  padding: 5px;
+}
+
+
+/* Style for the active page button */
+.custom-paginator .p-paginator .p-paginator-page.p-highlight {
+  background-color: #CD9403; /* Different color for active page */
+  color: #fff;
+}
+
+.table-scroll-wrapper {
+  scrollbar-color: #CD9403 #D9D9D9;
+
+}

@@ -95,6 +95,12 @@ const AllTickets = () => {
   const [OpenModal, setOpenModal] = useState(false);
   const [OpenChat, setOpenChat] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [rows, setRows] = useState(5);
+  const onPage = (event) => {
+    setFirst(event.first); // Update starting row for current page
+    setRows(event.rows); // Update rows per page if changed
+  };
 
   const handleOpen = () => setOpenModal(true);
   const handleClose = () => setOpenModal(false);
@@ -148,13 +154,18 @@ const AllTickets = () => {
   );
 
   return (
-    <div className="p-4 overflow-auto">
+    <div className="p-5 table-scroll-wrapper">
       <DataTable
         value={requests}
         paginator
-        rows={10}
+        first={first} // Controlled pagination
+        rows={rows}
+        onPage={onPage}
+        scrollHeight="400px"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="Showing 1 to 10 of 50 entries"
         tableStyle={{ minWidth: "100rem" }}
-        className="p-datatable-gridlines"
+        className="custom-paginator" 
       >
         <Column
           field="id"

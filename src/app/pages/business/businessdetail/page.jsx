@@ -51,8 +51,8 @@ const BusinessDetails = () => {
               <Image
                 src="/c1.png"
                 alt="braeloLogo"
-                width={30} // Adjust width as needed
-                height={30} // Adjust height as needed
+                width={20} // Adjust width as needed
+                height={20} // Adjust height as needed
               />{" "}
             </div>
             <h1 className="text-[#75818D] text-[18px] font-[700] font-plus ">
@@ -65,23 +65,23 @@ const BusinessDetails = () => {
               alt="button1"
               className="cursor-pointer"
               onClick={handleopen}
-              width={45} // Adjust width as needed
-              height={24} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={25} // Adjust height as needed
             />
             <Image
               src="/b1.png"
               alt="button2"
               className="cursor-pointer"
               onClick={handleEditOpen}
-              width={45} // Adjust width as needed
-              height={24} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={25} // Adjust height as needed
             />
             <Image
               src="/b3.png"
               alt="button3"
               className="cursor-pointer"
-              width={35} // Adjust width as needed
-              height={24} // Adjust height as needed
+              width={25} // Adjust width as needed
+              height={25} // Adjust height as needed
             />
             <ChatModal isOpen={OpeModal} onClose={handleclose} />
             <EditdetailsModal isOpen={EditModal} onClose={handleEditClose} />
@@ -94,16 +94,16 @@ const BusinessDetails = () => {
             <Image
               src="/b6.png"
               alt="businessImage"
-              width={100} // Adjust width as needed
-              height={100} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={50} // Adjust height as needed
             />
           </div>
           <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
             <Image
               src="/b6.png"
               alt="businessImage"
-              width={100} // Adjust width as needed
-              height={100} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={50} // Adjust height as needed
             />
           </div>
 
@@ -111,8 +111,8 @@ const BusinessDetails = () => {
             <Image
               src="/b6.png"
               alt="businessImage"
-              width={100} // Adjust width as needed
-              height={100} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={50} // Adjust height as needed
             />
           </div>
         </div>

@@ -15,6 +15,12 @@ export default function UserDataTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [rows, setRows] = useState(10);
+  const onPage = (event) => {
+    setFirst(event.first); // Update starting row for current page
+    setRows(event.rows); // Update rows per page if changed
+  }
 
   useEffect(() => {
     setData(UserData);
@@ -175,18 +181,21 @@ export default function UserDataTable() {
 
   // Rendering the table
   return (
-    <div className="p-5">
-      <div className="">
+    <div className="p-5 table-scroll-wrapper">
         <DataTable
           value={data}
           scrollable
           dataKey="ID"
           paginator
-          rows={20}
+          first={first} // Controlled pagination
+          rows={rows}
+          onPage={onPage}
+          scrollHeight="400px"
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Showing 1 to 10 of 50 entries"
           tableStyle={{ minWidth: "200rem" }}
+          className="custom-paginator" 
         >
           <Column
             header={headerCheckbox()}
@@ -300,7 +309,6 @@ export default function UserDataTable() {
             bodyStyle={getBodyStyle()}
           />
         </DataTable>
-      </div>
     </div>
   );
 }

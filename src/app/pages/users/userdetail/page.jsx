@@ -54,8 +54,8 @@ const Userdetail = () => {
               alt="button1"
               className="cursor-pointer"
               onClick={() => setModalOpen(true)}
-              width={45} // Adjust width as needed
-              height={10}
+              width={50} // Adjust width as needed
+              height={25}
             />
 
             <Image
@@ -63,16 +63,16 @@ const Userdetail = () => {
               alt="button2"
               className="cursor-pointer"
               onClick={OpeModal}
-              width={45} // Adjust width as needed
-              height={10} // Adjust height as needed
+              width={50} // Adjust width as needed
+              height={25} // Adjust height as needed
             />
 
             <Image
               src="/b3.png"
               alt="button3"
               className="cursor-pointer"
-              width={35} // Adjust width as needed
-              height={10}  // Adjust height as needed
+              width={25} // Adjust width as needed
+              height={25}  // Adjust height as needed
             />
           </div>
           <ChatModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />

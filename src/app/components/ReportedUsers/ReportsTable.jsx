@@ -7,6 +7,12 @@ import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
 
 export default function ReportsTable() {
   const [reports, setReports] = useState([]);
+  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [rows, setRows] = useState(5);
+  const onPage = (event) => {
+    setFirst(event.first); // Update starting row for current page
+    setRows(event.rows); // Update rows per page if changed
+  };
 
   const sampleData = [
     {
@@ -105,7 +111,6 @@ export default function ReportsTable() {
   useEffect(() => {
     setReports(sampleData);
   }, [sampleData]); // Include `sampleData` if it may change
-  
 
   const actionBodyTemplate = (rowData) => {
     const handleAction = (userId, action) => {
@@ -146,12 +151,19 @@ export default function ReportsTable() {
   };
 
   return (
-    <div className="card p-5">
+    <div className="card p-5 table-scroll-wrapper">
       <DataTable
         value={reports}
-        tableStyle={{ minWidth: "100rem" }}
         paginator
-        rows={5}
+        first={first} // Controlled pagination
+        rows={rows}
+        onPage={onPage}
+        scrollHeight="400px"
+        rowsPerPageOptions={[5, 10, 20]}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="Showing 1 to 10 of 50 entries"
+        tableStyle={{ minWidth: "100rem" }}
+        className="custom-paginator"
       >
         <Column
           field="id"

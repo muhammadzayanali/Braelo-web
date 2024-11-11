@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Image } from "primereact/image";
@@ -17,16 +17,18 @@ const CategoriesTable = () => {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const router = useRouter();
+  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [rows, setRows] = useState(10);
+  const onPage = (event) => {
+    setFirst(event.first); // Update starting row for current page
+    setRows(event.rows);
+  };
 
   const deleteCategory = (categoryId) => {
     const updatedCategories = categories.filter((cat) => cat.id !== categoryId);
     setCategories(updatedCategories);
   };
   const viewSubcategories = (category) => {
-    const subcategoriesData = {
-      name: category.name,
-      subcategories: JSON.stringify(category.subcategories),
-    };
     router.push(`/pages/categories/${category.id}/subcategories`);
   };
 
@@ -146,7 +148,7 @@ const CategoriesTable = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-5 table-scroll-wrapper">
       {isEditModalOpen && (
         <EditModal
           isOpen={isEditModalOpen}
@@ -163,7 +165,17 @@ const CategoriesTable = () => {
         />
       )}
 
-      <DataTable value={categories} paginator rows={10} className="p-datatable">
+      <DataTable
+        value={categories}
+        paginator
+        first={first} // Controlled pagination
+        rows={rows}
+        onPage={onPage}
+        rowsPerPageOptions={[5, 10, 20]}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="Showing 1 to 10 of 50 entries"
+        className="custom-paginator"
+      >
         <Column
           header={
             <label className="inline-flex items-center cursor-pointer">
