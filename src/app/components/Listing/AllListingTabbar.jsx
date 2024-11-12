@@ -15,9 +15,9 @@ const AllListingTabbar = () => {
   };
 
   const buttonClasses = (index) =>
-    `font-semibold transition ease-in-out duration-300 text-[14px]  ${
+    `font-semibold transition ease-in-out duration-300 text-[13px] w-[100px] ${
       activeButton === index
-        ? "border-b-2 border-[#868E96] text-[#78828A] font-[600]"
+        ? "border-b-2 border-[#cd9403] text-[#78828A] font-bold"
         : "text-[#ACB6BE]"
     }`;
 
@@ -40,25 +40,25 @@ const AllListingTabbar = () => {
   return (
     <>
       <Swiper
-        slidesPerView={10}
-        spaceBetween={10}
+        slidesPerView={7}
         navigation
         loop={false}
         modules={[Navigation]}
-        className="px-10"
+        className=""
       >
         {buttons.map((label, index) => (
           <SwiperSlide key={index}>
+            <div className="px-10">
             <button
               className={buttonClasses(index + 1)}
               onClick={() => handleClick(index + 1)}
             >
               {label}
             </button>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
-
       <div className="mt-4">
         {activeButton === 1 && <Vehicles/>}
         {activeButton === 2 && ""}
