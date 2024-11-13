@@ -50,8 +50,8 @@ const BusinessHeader = () => {
               className="cursor-pointer"
               onClick={handleNewBusiness}
               alt="addbusniess"
-              width={50}
-              height={50}
+              width={40}
+              height={30}
 
             />
             <div>

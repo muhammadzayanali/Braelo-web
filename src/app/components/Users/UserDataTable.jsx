@@ -190,7 +190,7 @@ export default function UserDataTable() {
           first={first} // Controlled pagination
           rows={rows}
           onPage={onPage}
-          scrollHeight="400px"
+          scrollHeight="700px"
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Showing 1 to 10 of 50 entries"

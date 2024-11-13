@@ -25,7 +25,7 @@ const DashboardCards = () => {
   ];
 
   return (
-    <div className="mt-5 p-5">
+    <div className="mt-5">
       <h1 className="text-[#78828A] text-[24px] font-[500] flex items-center">
         Dashboard
       </h1>

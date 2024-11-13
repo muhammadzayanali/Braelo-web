@@ -15,14 +15,14 @@ const Layout = ({ children }) => {
 
     <div className="flex h-screen">
     {/* Sidebar */}
-    <div className="fixed h-full overflow-y-auto">
+    <div className="">
       <Sidebar />
     </div>
   
     {/* Main Content */}
-    <div className="w-[calc(100%-20%)] ml-[20%] xl:ml-[20%] 2xl:ml-[12%] h-full flex flex-col">
+    <div className="w-[calc(100%-256px)]  h-full flex flex-col">
       <NavBar />
-      <div className="flex-1 overflow-y-auto">
+      <div className="p-5 overflow-y-auto">
         {children}
       </div>
     </div>
