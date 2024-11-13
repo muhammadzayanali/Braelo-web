@@ -110,7 +110,7 @@ export default function ReportsTable() {
 
   useEffect(() => {
     setReports(sampleData);
-  }, [sampleData]); // Include `sampleData` if it may change
+  }, []);
 
   const actionBodyTemplate = (rowData) => {
     const handleAction = (userId, action) => {

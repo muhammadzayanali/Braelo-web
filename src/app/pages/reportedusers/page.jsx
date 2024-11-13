@@ -1,3 +1,5 @@
+"use client";
+
 import ReportsTable from "@/app/components/ReportedUsers/ReportsTable";
 import React from "react";
 import BackButton from "@/app/components/BackButton";
