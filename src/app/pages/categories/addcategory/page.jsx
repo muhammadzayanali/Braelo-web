@@ -56,7 +56,7 @@ const AddCategory = () => {
         <div className="flex items-center gap-2">
           <BackButton />
           <h1 className="text-[#78828A] text-[24px] font-[500]">
-            0 Add Category
+             Add Category
           </h1>
         </div>
         <div className="mb-4">

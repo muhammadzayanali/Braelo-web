@@ -67,7 +67,7 @@ const NavBar = () => {
                     FAQ&rsquo;s
                   </div> */}
                   <div
-                    className="px-4 py-2 cursor-pointertext-white hover: hover:"
+                    className="px-4 py-2 cursor-pointer"
                     onClick={() => router.push("/pages/adminprofile")}
                   >
                     Profile Setting

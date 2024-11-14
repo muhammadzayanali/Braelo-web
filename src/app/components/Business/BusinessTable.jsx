@@ -16,7 +16,7 @@ export default function BussniessTable() {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const [first, setFirst] = useState(0); // Starting row for pagination
-  const [rows, setRows] = useState(5);
+  const [rows, setRows] = useState(10);
   const onPage = (event) => {
     setFirst(event.first); // Update starting row for current page
     setRows(event.rows); // Update rows per page if changed
@@ -184,7 +184,7 @@ export default function BussniessTable() {
           first={first} // Controlled pagination
           rows={rows}
           onPage={onPage}
-          scrollHeight="400px"
+          scrollHeight="700px"
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Showing 1 to 10 of 50 entries"

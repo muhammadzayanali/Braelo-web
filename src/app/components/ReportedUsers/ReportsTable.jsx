@@ -1,14 +1,16 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Button } from "primereact/button"; // Import Button component
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
 
 export default function ReportsTable() {
   const [reports, setReports] = useState([]);
   const [first, setFirst] = useState(0); // Starting row for pagination
   const [rows, setRows] = useState(5);
+  const [selectedReport, setSelectedReport] = useState(null); // State to hold the selected report for the modal
+  const [isModalVisible, setModalVisible] = useState(false); // State to control modal visibility
+
   const onPage = (event) => {
     setFirst(event.first); // Update starting row for current page
     setRows(event.rows); // Update rows per page if changed
@@ -115,9 +117,10 @@ export default function ReportsTable() {
   const actionBodyTemplate = (rowData) => {
     const handleAction = (userId, action) => {
       if (action === "view") {
-        // router.push("/Reportdetail"); // Next.js navigation
+        setSelectedReport(rowData); // Set the selected report
+        setModalVisible(true); // Show the modal
       } else if (action === "delete") {
-        alert(`Are you sure delete this request, ${userId}`);
+        (`Are you sure delete this request, ${userId}`);
       }
     };
 
@@ -129,6 +132,7 @@ export default function ReportsTable() {
         <option value="">Actions</option>
         <option value="view">View Detail</option>
         <option value="delete">Delete</option>
+        <option value="response">Response</option>
       </select>
     );
   };
@@ -148,6 +152,12 @@ export default function ReportsTable() {
         report.id === id ? { ...report, description: newDescription } : report
       )
     );
+  };
+
+  // Close the modal
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedReport(null); // Clear the selected report
   };
 
   return (
@@ -215,6 +225,48 @@ export default function ReportsTable() {
           headerStyle={getHeaderStyle()}
         />
       </DataTable>
+
+      {/* Custom Modal */}
+      {isModalVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75 z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-1/2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold">Report Detail</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close Modal"
+              >
+                <span className="text-2xl">&times;</span> {/* Close icon */}
+              </button>
+            </div>
+            <div className="mt-4">
+              {selectedReport && (
+                <div>
+                  <p>
+                    <strong>Reported To:</strong> {selectedReport.ReportedTo}
+                  </p>
+                  <p>
+                    <strong>Reported By:</strong> {selectedReport.ReportedBy}
+                  </p>
+                  <p>
+                    <strong>Description:</strong> {selectedReport.description}
+                  </p>
+                  <p>
+                    <strong>Reason:</strong> {selectedReport.Reason}
+                  </p>
+                  <p>
+                    <strong>Date Created:</strong> {selectedReport.DateCreated}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {selectedReport.status}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

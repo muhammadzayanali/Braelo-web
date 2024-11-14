@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { FaTimes } from "react-icons/fa";  // Import close icon from react-icons
 
 const userData = {
   name: "Devid Jhon",
@@ -15,6 +16,7 @@ const AdminCard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(userData);
   const [previewImage, setPreviewImage] = useState(userData.image);
+  const [password, setPassword] = useState("");  // Add state for password
 
   // Function to handle opening the modal
   const openModal = () => setIsModalOpen(true);
@@ -41,10 +43,14 @@ const AdminCard = () => {
     }
   };
 
+  // Function to handle password input change
+  const handlePasswordChange = (e) => setPassword(e.target.value);
+
   // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Updated user info:", formData); // You can replace this with save logic
+    console.log("Updated user info:", formData);
+    console.log("Updated password:", password); // Log password change
     closeModal();
   };
 
@@ -53,7 +59,7 @@ const AdminCard = () => {
   return (
     <div className="flex justify-center h-screen items-center">
       <div className="border rounded-lg shadow-lg p-6 bg-white max-w-lg fixed">
-        <h2 className="text-xl text-[#78828A]  font-semibold mb-4">
+        <h2 className="text-xl text-[#78828A] font-semibold mb-4">
           Personal Information
         </h2>
 
@@ -67,9 +73,7 @@ const AdminCard = () => {
             className="rounded-full object-cover mr-4"
           />
           <div>
-            <h3 className="text-lg font-medium text-[#78828A] ">
-              {name}
-            </h3>
+            <h3 className="text-lg font-medium text-[#78828A] ">{name}</h3>
             <p className="text-[#78828A] ">{email}</p>
           </div>
         </div>
@@ -98,9 +102,17 @@ const AdminCard = () => {
 
         {/* Modal for Editing */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-auto">
             <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
-              <h3 className="text-lg font-semibold mt-20">
+              {/* Close Icon */}
+              <button
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+              >
+                <FaTimes size={24} />
+              </button>
+
+              <h3 className="text-lg font-semibold mt-[150px]">
                 Edit Personal Information
               </h3>
 
@@ -158,11 +170,20 @@ const AdminCard = () => {
                   />
                 </div>
 
+                {/* Password Input */}
+                <div className="mb-4">
+                  <label className="block mb-2 text-gray-600">New Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+
                 {/* Profile Image Input */}
                 <div className="mb-4">
-                  <label className="block mb-2 text-gray-600">
-                    Profile Image
-                  </label>
+                  <label className="block mb-2 text-gray-600">Profile Image</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -185,13 +206,13 @@ const AdminCard = () => {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="bg-gray-300 text-black px-10 py-2 rounded-lg "
+                    className="bg-gray-300 text-black px-10 py-2 rounded-lg"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-10 py-2 text-white rounded-lg  bg-[#CD9403]"
+                    className="px-10 py-2 text-white rounded-lg bg-[#CD9403]"
                   >
                     Save
                   </button>

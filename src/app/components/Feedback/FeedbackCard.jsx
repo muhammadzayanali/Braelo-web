@@ -1,128 +1,110 @@
-import React from "react";
-import Image from "next/image";
+"use client";
+import React, { useState } from "react";
 
 const feedbackData = [
-    {
-      id: 1,
-      name: "John Doe",
-      image: "/report.png",
-      description:
-        "Great service! I had an excellent experience and will definitely return.",
-      date: "2024-11-10",
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      image: "/report.png",
-      description:
-        "The team was professional and exceeded my expectations. Highly recommend!",
-      date: "2024-11-11",
-      rating: 4.0,
-    },
-    {
-      id: 3,
-      name: "Michael Johnson",
-      image: "/report.png",
-      description:
-        "Good quality but a bit delayed in delivery. Overall satisfied.",
-      date: "2024-11-09",
-      rating: 3.8,
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      image: "/report.png",
-      description:
-        "Excellent customer support! They helped me through every step.",
-      date: "2024-11-08",
-      rating: 4.7,
-    },
-    {
-      id: 5,
-      name: "William Brown",
-      image: "/report.png",
-      description:
-        "Not quite what I expected, but the service was still decent.",
-      date: "2024-11-07",
-      rating: 3.2,
-    },
-    {
-      id: 6,
-      name: "Linda Wilson",
-      image: "/report.png",
-      description:
-        "Amazing experience from start to finish! Will definitely use again.",
-      date: "2024-11-06",
-      rating: 4.9,
-    },
-    {
-      id: 7,
-      name: "James Taylor",
-      image: "/report.png",
-      description:
-        "Service was okay, but I had higher expectations. Room for improvement.",
-      date: "2024-11-05",
-      rating: 3.5,
-    },
-    {
-      id: 8,
-      name: "Patricia Anderson",
-      image: "/report.png",
-      description:
-        "Highly efficient and reliable. I got exactly what I needed.",
-      date: "2024-11-04",
-      rating: 4.3,
-    },
-  ];
-  
-
-// Calculate average rating
-const calculateAverageRating = () => {
-  const total = feedbackData.reduce((sum, feedback) => sum + feedback.rating, 0);
-  return (total / feedbackData.length).toFixed(1);
-};
+  {
+    id: 1,
+    name: "John Doe",
+    reaction: "Hate", // Hate
+    description: "The service was not what I expected. Would not recommend.",
+    date: "2024-11-10",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    reaction: "Dislike", // Dislike
+    description: "The team was professional, but there were some issues. Mixed experience.",
+    date: "2024-11-11",
+  },
+  {
+    id: 3,
+    name: "Michael Johnson",
+    reaction: "Neutral", // Neutral
+    description: "Good quality but a bit delayed in delivery. Overall satisfied.",
+    date: "2024-11-09",
+  },
+  {
+    id: 4,
+    name: "Emily Davis",
+    reaction: "Like", // Like
+    description: "Excellent customer support! They helped me through every step.",
+    date: "2024-11-08",
+  },
+  {
+    id: 5,
+    name: "William Brown",
+    reaction: "Love", // Love
+    description: "Amazing experience! Will definitely come back.",
+    date: "2024-11-07",
+  },
+];
 
 const FeedbackCard = () => {
-  const totalFeedbacks = feedbackData.length;
-  const averageRating = calculateAverageRating();
+  const [selectedReaction, setSelectedReaction] = useState(""); // State to store selected reaction filter
+
+  // Filter feedback data based on selected reaction
+  const filteredData = selectedReaction
+    ? feedbackData.filter((feedback) => feedback.reaction === selectedReaction)
+    : feedbackData;
 
   return (
     <div className="space-y-6 mt-6">
-      {/* Header Section with Total Feedbacks and Average Rating */}
+      {/* Filter Section */}
       <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-        <h2 className="text-lg font-semibold text-gray-500">Total Feedbacks: {totalFeedbacks}</h2>
+        <h2 className="text-lg font-semibold text-gray-500">Feedbacks</h2>
         <div className="flex items-center space-x-4">
-          <span className="text-lg font-medium text-gray-600">Average:</span>
+          <span className="text-lg font-medium text-gray-600">Filter by reaction:</span>
           <div className="flex items-center space-x-2">
-            <progress
-              className="w-32 h-4 rounded-full"
-              value={averageRating}
-              max="5"
-            ></progress>
-            <span className="text-lg font-semibold text-gray-500">{averageRating}/5</span>
+            <button
+              className="text-lg"
+              onClick={() => setSelectedReaction("Hate")}
+            >
+              Hate
+            </button>
+            <button
+              className="text-lg"
+              onClick={() => setSelectedReaction("Dislike")}
+            >
+              Dislike
+            </button>
+            <button
+              className="text-lg"
+              onClick={() => setSelectedReaction("Neutral")}
+            >
+              Neutral
+            </button>
+            <button
+              className="text-lg"
+              onClick={() => setSelectedReaction("Like")}
+            >
+              Like
+            </button>
+            <button
+              className="text-lg"
+              onClick={() => setSelectedReaction("Love")}
+            >
+              Love
+            </button>
+            {/* Reset Filter Button */}
+            <button
+              className="text-lg text-blue-500"
+              onClick={() => setSelectedReaction("")}
+            >
+              Reset
+            </button>
           </div>
         </div>
       </div>
 
       {/* Feedback Cards */}
-      {feedbackData.map(({ id, name, image, description, date }) => (
-        <div
-          key={id}
-          className="flex items-start bg-white rounded-lg shadow-lg p-6 space-x-4"
-        >
-          <Image
-            src={image}
-            alt={name}
-            className="rounded-full object-cover"
-            width={60}
-            height={60}
-          />
+      {filteredData.map(({ id, name, reaction, description, date }) => (
+        <div key={id} className="flex items-start bg-white rounded-lg shadow-lg p-6 space-x-4">
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-500">{name}</h3>
               <span className="text-sm text-blue-500">{date}</span>
             </div>
+            <p className="text-sm text-gray-400 mt-1">Reaction: {reaction}</p>
             <p className="text-gray-600 mt-2">{description}</p>
           </div>
         </div>
