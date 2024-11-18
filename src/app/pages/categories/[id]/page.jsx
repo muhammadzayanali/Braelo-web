@@ -7,7 +7,6 @@ function Subcatogory() {
     const params = useParams();
     const {id} = params;
 
-    console.log("SLUG", id)
 
 
   return (
