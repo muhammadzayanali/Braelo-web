@@ -12,10 +12,7 @@ const categories = [
   { name: "Furniture", slug: "furniture" },
   { name: "Fashion", slug: "fashion" },
   { name: "Kids", slug: "kids" },
-  { name: "Sports & Hobby", slug: "sports-hobby" },
-  { name: "Outing", slug: "outing" },
-  { name: "Places", slug: "places" },
-  { name: "Tours", slug: "tours" },
+  { name: "Sports & Hobby", slug: "sportsandhobby" },
 ];
 
 const Categories = () => {

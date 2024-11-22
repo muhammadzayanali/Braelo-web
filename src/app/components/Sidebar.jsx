@@ -16,6 +16,7 @@ const sidebarItems = [
   { to: "/pages/reportedusers", icon: "/a11.png", label: "Reported Users" },
   { to: "/pages/privacypolicy", icon: "/a12.png", label: "Privacy Policy" },
   { to: "/pages/feedback", icon: "/fd.svg", label: "Feedback" },
+  { to: "/pages/banners", icon: "/banner.svg", label: "Banner" },
 ];
 
 const Sidebar = () => {

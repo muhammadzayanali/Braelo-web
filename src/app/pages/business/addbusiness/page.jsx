@@ -120,8 +120,8 @@ const AddNewBusiness = () => {
                         src="/b6.png"
                         alt="filesicon"
                         onClick={handleIconClick}
-                        width={24}
-                        height={24}
+                        width={50}
+                        height={50}
                         className="cursor-pointer"
                       />
                       <input

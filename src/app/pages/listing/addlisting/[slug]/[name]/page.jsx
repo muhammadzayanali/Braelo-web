@@ -2,63 +2,9 @@
 import { useParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import BackButton from "@/app/components/BackButton";
-
+import { FormData } from "@/app/components/Listing/FormData";
 // Example form data with shared fields
-const formData = {
-  vehicles: {
-    commonFields: [
-      { label: "Choose Image", type: "file", name: "image" },
-      { label: "Ad Title", type: "text", name: "title" },
-      { label: "Location", type: "text", name: "location" },
-      { label: "Make*", type: "text", name: "make" },
-      { label: "Price", type: "number", name: "price" },
-      { label: "Model", type: "text", name: "model" },
-      { label: "Year", type: "number", name: "year" },
-      { label: "Color", type: "text", name: "color" },
-      { label: "Fuel Type", type: "text", name: "fuelType" },
-      { label: "Description", type: "textarea", name: "description" },
-    ],
-    cars: {
-      chips: [
-        { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
-        { label: "Number of Doors", options: ["1/3", "4", "3"] },
-        { label: "Purpose", options: ["Sale", "Rental"] },
-        { label: "Negotiable", options: ["Yes", "No"] },
-      ],
-    },
-    motorcycle: {
-      chips: [
-        { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
-        { label: "Purpose", options: ["Sale", "Rental"] },
-        { label: "Negotiable", options: ["Yes", "No"] },
-      ],
-    },
-  },
-  realestate: {
-    commonFields: [
-      { label: "Choose Image", type: "file", name: "image" },
-      { label: "Ad Title", type: "text", name: "title" },
-      { label: "Location", type: "text", name: "location" },
-      { label: "Property Type*", type: "text", name: "propertytype" },
-      { label: "No of Bedrooms", type: "number", name: "noofbedrooms" },
-      { label: "Year Built", type: "number", name: "yearbuilt" },
-      { label: "Size", type: "text", name: "size" },
-      { label: "Fuel Type", type: "text", name: "fuelType" },
-      { label: "Description", type: "textarea", name: "description" },
-    ],
-    apartment: {
-      chips: [
-        { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
-        { label: "Number of Doors", options: ["1/3", "4", "3"] },
-        { label: "Purpose", options: ["Sale", "Rental"] },
-        { label: "Negotiable", options: ["Yes", "No"] },
-      ],
-    },
-  },
-};
+
 
 const Form = () => {
   const { slug, name } = useParams();
@@ -70,7 +16,7 @@ const Form = () => {
 
   useEffect(() => {
     if (slug && name) {
-      const category = formData[slug];
+      const category = FormData[slug];
       if (category) {
         setCommonFields(category.commonFields || []);
         const subCategoryData = category[name] || {};
@@ -130,22 +76,31 @@ const Form = () => {
           <textarea
             name={field.name}
             id={field.name}
-            className="w-full p-2 border-2 border-yellow-400 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            placeholder="Enter"
+            className="w-full p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         ) : field.type === "file" ? (
           <input
             type="file"
             name={field.name}
             id={field.name}
-            className="w-full p-2 border-2 border-yellow-400 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-2  border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
             onChange={handleImageChange}
+          />
+        ) : field.type === "date" ? (
+          <input
+            type={field.type}
+            name={field.name}
+            id={field.name}
+            className="w-full p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         ) : (
           <input
             type={field.type}
             name={field.name}
             id={field.name}
-            className="w-full p-2 border-2 border-yellow-400 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            placeholder="Enter"
+            className="w-full p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         )}
       </div>
@@ -164,8 +119,8 @@ const Form = () => {
               onClick={() => handleChipSelection(chipGroup.label, option)}
               className={`px-4 py-2 text-sm rounded-full cursor-pointer border ${
                 selectedChips[chipGroup.label] === option
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-gray-200 text-gray-700 border-gray-300"
+                  ? "bg-[#d8b039] text-white "
+                  : "bg-gray-200 text-gray-700 border-gray-200"
               }`}
             >
               {option}
@@ -185,7 +140,7 @@ const Form = () => {
       </div>
       <form
         onSubmit={handleSubmit}
-        className="max-w-full mx-auto p-6 bg-white shadow-lg rounded-lg"
+        className="max-w-[50%] mx-auto p-6 bg-white shadow-lg rounded-lg"
       >
         <h1 className="text-xl font-bold text-center mb-6">
           Category: {slug} - Subcategory: {categoryName}
@@ -196,12 +151,12 @@ const Form = () => {
             <img
               src={imagePreview}
               alt="Preview"
-              className="max-h-48 rounded-md border-2 border-gray-300"
+              className="max-h-48 rounded-md border-2 border-gray-200"
             />
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 ] ">
           {/* Render Common Fields */}
           {renderFields(commonFields)}
 
@@ -212,10 +167,10 @@ const Form = () => {
         {/* Chips Section */}
         <div className="my-6">{renderChips()}</div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center ">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="px-6 py-2 bg-[#d8b039] text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             Submit
           </button>
