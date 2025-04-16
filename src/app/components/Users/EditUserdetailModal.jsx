@@ -2,7 +2,7 @@
 import React from "react";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { postData } from "@/app/api/method"; // Import your postData method
+import { postData } from "@/app/API/method";
 
 const EditUserdetailModal = ({ isOpen, onClose, userData }) => {
   const [formData, setFormData] = React.useState({
