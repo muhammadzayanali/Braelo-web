@@ -112,9 +112,9 @@ const Userdetail = () => {
                   Download
                 </span>
               </div>
-              {isDropdownOpen && (
+              {/* {isDropdownOpen && (
                 <UserDropdown onActionSelect={handleActionSelect} />
-              )}
+              )} */}
             </div>
           </div>
         </div>
