@@ -12,9 +12,9 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Userdetail = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const userId = searchParams.get('id');
+  // const searchParams = useSearchParams();
+  // const router = useRouter();
+  // const userId = searchParams.get('id');
   
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
