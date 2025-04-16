@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ListingTabbar from "@/app/components/Listing/ListingTabbar";
 import ChatModal from "@/app/components/ChatModal";
@@ -11,10 +11,24 @@ const BusinessDetails = () => {
   const router = useRouter();
   const [OpeModal, setOpenModal] = useState(false);
   const [EditModal, setEditModal] = useState(false);
+  const [businessData, setBusinessData] = useState(null);
+
+  useEffect(() => {
+    // Retrieve the business data from sessionStorage
+    const storedData = sessionStorage.getItem('currentBusinessData');
+    if (storedData) {
+      setBusinessData(JSON.parse(storedData));
+    }
+  }, []);
+
   const handleopen = () => setOpenModal(true);
   const handleclose = () => setOpenModal(false);
   const handleEditOpen = () => setEditModal(true);
   const handleEditClose = () => setEditModal(false);
+
+  if (!businessData) {
+    return <div className="p-5">Loading business details...</div>;
+  }
 
   return (
     <>
@@ -24,7 +38,7 @@ const BusinessDetails = () => {
             <div className="flex items-center gap-2">
               <BackButton />
               <h1 className="text-[#78828A] text-[24px] font-[500] flex items-center">
-                User Business Details
+                {businessData.BusinessName} Details
               </h1>
             </div>
             <div className="relative">
@@ -48,15 +62,28 @@ const BusinessDetails = () => {
         <div className="flex justify-between mt-5">
           <div className="flex gap-2 items-center ">
             <div className="bg-[#FFCC35] px-2 py-2 rounded-full">
-              <Image
-                src="/c1.png"
-                alt="braeloLogo"
-                width={20} // Adjust width as needed
-                height={20} // Adjust height as needed
-              />{" "}
+              {businessData.business_logo ? (
+                <img 
+                  src={businessData.business_logo} 
+                  alt="business logo"
+                  width={20}
+                  height={20}
+                  className="rounded-full"
+                  onError={(e) => {
+                    e.target.src = '/c1.png';
+                  }}
+                />
+              ) : (
+                <Image
+                  src="/c1.png"
+                  alt="braeloLogo"
+                  width={20}
+                  height={20}
+                />
+              )}
             </div>
             <h1 className="text-[#75818D] text-[18px] font-[700] font-plus ">
-              Braelo
+              {businessData.BusinessName}
             </h1>
           </div>
           <div className="flex gap-2">
@@ -65,23 +92,23 @@ const BusinessDetails = () => {
               alt="button1"
               className="cursor-pointer"
               onClick={handleopen}
-              width={50} // Adjust width as needed
-              height={25} // Adjust height as needed
+              width={50}
+              height={25}
             />
             <Image
               src="/b1.png"
               alt="button2"
               className="cursor-pointer"
               onClick={handleEditOpen}
-              width={50} // Adjust width as needed
-              height={25} // Adjust height as needed
+              width={50}
+              height={25}
             />
             <Image
               src="/b3.png"
               alt="button3"
               className="cursor-pointer"
-              width={25} // Adjust width as needed
-              height={25} // Adjust height as needed
+              width={25}
+              height={25}
             />
             <ChatModal isOpen={OpeModal} onClose={handleclose} />
             <EditdetailsModal isOpen={EditModal} onClose={handleEditClose} />
@@ -90,46 +117,41 @@ const BusinessDetails = () => {
       </div>
       <div className="p-5 border-b">
         <div className="flex gap-3">
-          <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <Image
-              src="/b6.png"
-              alt="businessImage"
-              width={50} // Adjust width as needed
-              height={50} // Adjust height as needed
-            />
-          </div>
-          <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <Image
-              src="/b6.png"
-              alt="businessImage"
-              width={50} // Adjust width as needed
-              height={50} // Adjust height as needed
-            />
-          </div>
-
-          <div className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
-            <Image
-              src="/b6.png"
-              alt="businessImage"
-              width={50} // Adjust width as needed
-              height={50} // Adjust height as needed
-            />
-          </div>
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="border border-dashed border-[#CD940380] w-[154px] h-[134px] flex justify-center p-10 rounded-lg">
+              {businessData.business_logo ? (
+                <img 
+                  src={businessData.business_logo} 
+                  alt="business image"
+                  width={50}
+                  height={50}
+                  onError={(e) => {
+                    e.target.src = '/b6.png';
+                  }}
+                />
+              ) : (
+                <Image
+                  src="/b6.png"
+                  alt="businessImage"
+                  width={50}
+                  height={50}
+                />
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="mt-5">
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D]">
             Bio:
             <span className="font-[400] text-[#a0a8b1] ml-1 ">
-              bsnmbfmsbdfbsdfg
+              {businessData.Bio || 'No bio available'}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D]">
             Description:
             <span className="font-[400] text-[#a0a8b1] ml-1 ">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do{" "}
-              <br /> eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              Ut enim ad minim <br /> veniam, quis nostrud :
+              {businessData.Description || 'No description available'}
             </span>
           </h1>
         </div>
@@ -147,37 +169,38 @@ const BusinessDetails = () => {
         <div>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D]">
             Name:
-            <span className="font-[400] text-[#a0a8b1] ml-1 ">Jane Doe</span>
+            <span className="font-[400] text-[#a0a8b1] ml-1 ">{businessData.BusinessName}</span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Email:
             <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
-              braelo@gmail.com
+              {businessData.Email}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Phone Number:
             <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
-              {" "}
-              +552163487922
+              {businessData["Phone Number"]}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Account Status:
-            <span className="font-[400] bg-[#06B64C] px-5 py-2 text-white rounded-lg ml-1 mt-3">
-              Active
+            <span className={`font-[400] px-5 py-2 text-white rounded-lg ml-1 mt-3 ${
+              businessData.Status === "Active" ? "bg-[#06B64C]" : "bg-[#C7233F]"
+            }`}>
+              {businessData.Status}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Email Verified Status:
-            <span className="font-[400] text-[#5D86C2] ml-1  mt-3">
+            <span className="font-[400] text-[#5D86C2] ml-1 mt-3">
               Verified
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Phone Verified Status:{" "}
             <span className="font-[400] text-[#C7233F] ml-1 mt-3">
-              Unverified:
+              Unverified
             </span>
           </h1>
           <div className="flex gap-1">
@@ -185,49 +208,38 @@ const BusinessDetails = () => {
               Interests:
             </h1>
             <div className="flex gap-2 mt-3 items-center">
-              <button className="text-[#CD9403] font-[700] text-[12px] border-2 border-[#CD9403]  px-3 py-1 rounded-lg">
-                Mechanic
-              </button>
-              <button className="text-[#CD9403] font-[700] text-[12px] border-2 border-[#CD9403]  px-3 py-1 rounded-lg">
-                Sales
-              </button>
-              <button className="text-[#CD9403] font-[700] text-[12px] border-2 border-[#CD9403]  px-3 py-1 rounded-lg">
-                Designer
-              </button>
+              {businessData.BusinessType && (
+                <button className="text-[#CD9403] font-[700] text-[12px] border-2 border-[#CD9403] px-3 py-1 rounded-lg">
+                  {businessData.BusinessType}
+                </button>
+              )}
             </div>
           </div>
         </div>
         <div>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D]">
-            OTP: <span className="font-[400] text-[#a0a8b1] ml-1 ">327277</span>
-          </h1>
-          <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
-            OTP Created At:{" "}
-            <span className="font-[400] text-[#a0a8b1] ml-1 mt-3 ">
-              09/19/2024
-            </span>
-          </h1>
-          <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Created At:
-            <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
-              09/19/2024
+            <span className="font-[400] text-[#a0a8b1] ml-1">
+              {businessData["Date Created"]}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Last Update:
             <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
-              09/19/2024
+              {businessData["Last Update"]}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
             Business Address:
             <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
-              202, Ogba, Lagos, Nigeria
+              {businessData.Coordinates || 'Address not available'}
             </span>
           </h1>
           <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
-            Profile Completion:
-            <span className="font-[400] text-[#CD9403] ml-1 mt-3">50%</span>
+            Website:
+            <span className="font-[400] text-[#a0a8b1] ml-1 mt-3">
+              {businessData.website || 'No website'}
+            </span>
           </h1>
         </div>
       </div>

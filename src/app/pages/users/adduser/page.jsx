@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useFormik } from "formik";
-import * as Yup from "yup"; // Import Yup for validation
+import * as Yup from "yup";
 import BackButton from "@/app/components/BackButton";
-
+import { postData } from "@/app/API/method";
 
 const AddUser = () => {
   const formik = useFormik({
@@ -12,35 +12,55 @@ const AddUser = () => {
       fullName: "",
       email: "",
       phoneNumber: "",
+      password: "",
       date: "",
-      role: "user", // default role
+      role: "user",
     },
     validationSchema: Yup.object({
       fullName: Yup.string().required("Full Name is required"),
-      email: Yup.string().email("Invalid email format").required("Email is required"),
+      email: Yup.string()
+        .email("Invalid email format")
+        .required("Email is required"),
       phoneNumber: Yup.string()
         .required("Phone Number is required")
         .matches(/^[0-9]+$/, "Phone Number must be digits"),
+      password: Yup.string()
+        .required("Password is required")
+        .min(6, "Password must be at least 6 characters"),
       date: Yup.date().required("Date is required"),
       role: Yup.string().required("Role is required"),
     }),
-    onSubmit: (values) => {
-      console.log("Form Data Submitted:", values);
-      // You can add your API call here to submit the form data
-      // Reset form after submission (optional)
-      formik.resetForm();
+    onSubmit: async (values, { resetForm }) => {
+      const apiUrl = "/admin-panel/signup";
+
+      const userData = {
+        email: values.email,
+        password: values.password,
+        name: values.fullName,
+        role: values.role === "admin" ? "true" : "false",
+      };
+
+      try {
+        const response = await postData(apiUrl, userData);
+        console.log("User created successfully:", response);
+
+        resetForm();
+        alert("User created successfully!");
+      } catch (error) {
+        console.error("Error creating user:", error);
+        alert("Failed to create user. Please try again.");
+      }
     },
   });
 
   return (
-  <>
-      
+    <>
       <div className="max-w-xl mx-auto mt-10 p-5 bg-white shadow-md rounded-md">
-      <div className="flex items-center gap-2 mb-5">
-        <BackButton/>
-     
-        <h2 className="text-2xl font-semibold text-center ">Add User</h2>
+        <div className="flex items-center gap-2 mb-5">
+          <BackButton />
+          <h2 className="text-2xl font-semibold text-center">Add User</h2>
         </div>
+        
         <form onSubmit={formik.handleSubmit}>
           {/* Full Name */}
           <div className="mb-4">
@@ -54,7 +74,11 @@ const AddUser = () => {
               value={formik.values.fullName}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full p-2 border rounded-md ${formik.touched.fullName && formik.errors.fullName ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full p-2 border rounded-md ${
+                formik.touched.fullName && formik.errors.fullName
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               required
             />
             {formik.touched.fullName && formik.errors.fullName && (
@@ -74,7 +98,11 @@ const AddUser = () => {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full p-2 border rounded-md ${formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full p-2 border rounded-md ${
+                formik.touched.email && formik.errors.email
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               required
             />
             {formik.touched.email && formik.errors.email && (
@@ -94,11 +122,39 @@ const AddUser = () => {
               value={formik.values.phoneNumber}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full p-2 border rounded-md ${formik.touched.phoneNumber && formik.errors.phoneNumber ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full p-2 border rounded-md ${
+                formik.touched.phoneNumber && formik.errors.phoneNumber
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               required
             />
             {formik.touched.phoneNumber && formik.errors.phoneNumber && (
               <p className="text-red-500">{formik.errors.phoneNumber}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className={`w-full p-2 border rounded-md ${
+                formik.touched.password && formik.errors.password
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+              required
+            />
+            {formik.touched.password && formik.errors.password && (
+              <p className="text-red-500">{formik.errors.password}</p>
             )}
           </div>
 
@@ -114,7 +170,11 @@ const AddUser = () => {
               value={formik.values.date}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full p-2 border rounded-md ${formik.touched.date && formik.errors.date ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full p-2 border rounded-md ${
+                formik.touched.date && formik.errors.date
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               required
             />
             {formik.touched.date && formik.errors.date && (
@@ -153,7 +213,7 @@ const AddUser = () => {
           </div>
         </form>
       </div>
-      </>
+    </>
   );
 };
 

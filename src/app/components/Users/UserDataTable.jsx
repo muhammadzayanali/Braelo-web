@@ -1,314 +1,254 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { UserData } from "./UserData";
-import { getHeaderStyle } from "./UserData";
-import { getBodyStyle } from "./UserData";
-import Link from "next/link";
+import { Dialog } from "primereact/dialog";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { getData, postData } from "@/app/API/method";
 import Image from "next/image";
-import Modal from "../Modal";
-export default function UserDataTable() {
+
+const API_URL = "/admin-panel/users";
+const DELETE_API_URL = "/admin-panel/user/deactivate";
+
+export default function UserTable() {
   const [data, setData] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-  const [first, setFirst] = useState(0); // Starting row for pagination
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
-  const onPage = (event) => {
-    setFirst(event.first); // Update starting row for current page
-    setRows(event.rows); // Update rows per page if changed
-  }
+  const router = useRouter();
+  const toastId = useRef(null);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getData(API_URL);
+      setData(response.data.results || []);
+    } catch (error) {
+      showToast("error", "Failed to fetch users");
+    }
+  };
 
   useEffect(() => {
-    setData(UserData);
+    fetchUsers();
   }, []);
 
-  const ActionButton = () => (
+  const showToast = (type, message) => {
+    if (toastId.current) {
+      toast.dismiss(toastId.current);
+    }
+    toastId.current = toast[type](message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  };
+
+  const confirmDelete = (user) => {
+    setUserToDelete(user);
+    setDeleteDialogVisible(true);
+  };
+
+  const deleteUser = async () => {
+    try {
+      await postData(DELETE_API_URL, { user_id: userToDelete.id });
+      showToast("success", "User deleted successfully");
+      fetchUsers();
+    } catch (error) {
+      showToast("error", "Failed to delete user");
+    } finally {
+      setDeleteDialogVisible(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const hideDeleteDialog = () => {
+    setDeleteDialogVisible(false);
+    setUserToDelete(null);
+  };
+
+  const onPage = (event) => {
+    setFirst(event.first);
+    setRows(event.rows);
+  };
+  
+  const handleViewProfile = (rowData) => {
+    // Store the user data in sessionStorage
+    sessionStorage.setItem('currentUserData', JSON.stringify(rowData));
+    router.push('/pages/users/userdetail');
+  };
+  const ActionButton = (rowData) => (
     <div className="flex gap-2">
-      <Link href="/pages/users/userdetail">
-        <Image src="/g3.png" alt="profile view" width={24} height={24} className="cursor-pointer"/>
-      </Link>
-      <Image src="/g2.png" alt="delete" width={24} height={24} onClick={openModal} className="cursor-pointer" />
-      <Modal
-        isOpen={isModalOpen}
-        closeModal={closeModal}
-        imageSrc="/delete.png"
-        text="Are you sure you want to delete this User?"
-        label1="Yes, I do"
-        label2="Cancel"
+      <Image
+      src="/g3.png"
+      alt="profile view"
+      width={24}
+      height={24}
+      onClick={() => handleViewProfile(rowData)} 
+      className="cursor-pointer"
+    />
+      <Image
+        src="/g2.png"
+        alt="delete"
+        width={24}
+        height={24}
+        onClick={() => confirmDelete(rowData)}
+        className="cursor-pointer"
       />
     </div>
   );
 
-  // Checkbox for selecting individual rows
   const rowCheckbox = (rowData) => {
-    const isChecked = selectedRows.some((row) => row.ID === rowData.ID);
+    const isChecked = selectedRows.some((row) => row.id === rowData.id);
     return (
       <input
         type="checkbox"
         checked={isChecked}
         onChange={() => toggleRowSelection(rowData)}
+        className="cursor-pointer"
       />
     );
   };
 
-  // Toggle row selection
-  const toggleRowSelection = (rowData) => {
-    if (selectedRows.some((row) => row.ID === rowData.ID)) {
-      setSelectedRows(selectedRows.filter((row) => row.ID !== rowData.ID));
-    } else {
-      setSelectedRows([...selectedRows, rowData]);
-    }
-  };
-
-  // Header checkbox for selecting all rows
   const headerCheckbox = () => {
-    const isAllSelected = selectedRows.length === data.length;
+    const isAllSelected = selectedRows.length === data.length && data.length > 0;
     return (
       <input
         type="checkbox"
         checked={isAllSelected}
         onChange={toggleSelectAll}
+        className="cursor-pointer"
       />
     );
   };
 
-  // Toggle select all rows
-  const toggleSelectAll = () => {
-    if (selectedRows.length === data.length) {
-      setSelectedRows([]); // Deselect all
-    } else {
-      setSelectedRows(data); // Select all
-    }
-  };
-
-  const StatusCheck = (rowData) => {
-    let statusClasses;
-    switch (rowData.Status) {
-      case "Active":
-        statusClasses = "bg-[#06B64C] text-white p-1 rounded-lg text-center";
-        break;
-      case "Deleted":
-        statusClasses = "bg-[#C7233F] text-white p-1 rounded-lg text-center";
-        break;
-      case "Inactive":
-        statusClasses = "bg-[#FFCC35] text-white p-1 rounded-lg text-center";
-        break;
-      default:
-        statusClasses = "py-1 px-2 rounded";
-    }
-    return <div className={statusClasses}>{rowData.Status}</div>;
-  };
-
-  // Email verification status check
-  const CheckVerification = (rowData) => {
-    let statusClasses;
-    switch (rowData.EmailVerified) {
-      case "Verified":
-        statusClasses = "text-[#5D86C2]";
-        break;
-      case "Unverified":
-        statusClasses = "text-[#C7233F]";
-        break;
-    }
-    return <div className={statusClasses}>{rowData.EmailVerified}</div>;
-  };
-
-  // Phone verification status check
-  const PhoneVerification = (rowData) => {
-    let statusClasses;
-    switch (rowData.PhoneVerified) {
-      case "Verified":
-        statusClasses = "text-[#5D86C2]";
-        break;
-      case "Unverified":
-        statusClasses = "text-[#C7233F]";
-        break;
-    }
-    return <div className={statusClasses}>{rowData.PhoneVerified}</div>;
-  };
-
-  const HeaderIcon = () => {
-    return (
-      <svg
-        width="10"
-        height="12"
-        viewBox="0 0 10 12"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M7.5 1.5V10.4999"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M3.99996 9L2.49998 10.5L1 9"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M2.5 10.4999V1.5"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M8.99996 2.99998L7.49998 1.5L6 2.99998"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+  const toggleRowSelection = (rowData) => {
+    setSelectedRows(prev =>
+      prev.some(row => row.id === rowData.id)
+        ? prev.filter(row => row.id !== rowData.id)
+        : [...prev, rowData]
     );
   };
 
-  const renderHeader = (label, Icon) => (
-    <div className="flex items-center gap-2">
-      <span>{label}</span>
-      <Icon />
+  const toggleSelectAll = () => {
+    setSelectedRows(prev => (prev.length === data.length ? [] : [...data]));
+  };
+
+  const StatusCheck = (rowData) => {
+    let statusClasses = rowData.is_active
+      ? "bg-[#06B64C] text-white p-1 rounded-lg text-center"
+      : "bg-[#C7233F] text-white p-1 rounded-lg text-center";
+    return <div className={statusClasses}>{rowData.is_active ? "Active" : "Inactive"}</div>;
+  };
+
+  const CheckVerification = (rowData) => {
+    let statusClasses = rowData.is_email_verified
+      ? "text-[#5D86C2]"
+      : "text-[#C7233F]";
+    return <div className={statusClasses}>{rowData.is_email_verified ? "Verified" : "Unverified"}</div>;
+  };
+
+  const PhoneVerification = (rowData) => {
+    let statusClasses = rowData.is_phone_verified
+      ? "text-[#5D86C2]"
+      : "text-[#C7233F]";
+    return <div className={statusClasses}>{rowData.is_phone_verified ? "Verified" : "Unverified"}</div>;
+  };
+
+  const RoleDisplay = (rowData) => {
+    const roleValue = rowData.role;
+    if (typeof roleValue === 'boolean') {
+      return <div>{roleValue ? "Admin" : "Client"}</div>;
+    } else if (typeof roleValue === 'string') {
+      return <div>{roleValue.toLowerCase() === 'admin' ? "Admin" : "Client"}</div>;
+    }
+    return <div>Client</div>;
+  };
+
+  const getHeaderStyle = () => ({
+    backgroundColor: '#f8f9fa',
+    color: '#495057',
+    fontWeight: 'bold',
+    padding: '1rem',
+    borderBottom: '1px solid #dee2e6'
+  });
+
+  const getBodyStyle = () => ({
+    padding: '1rem',
+    borderBottom: '1px solid #dee2e6'
+  });
+
+  const deleteDialogFooter = (
+    <div className="flex justify-end gap-3 mt-4 bg-slate-400">
+      <button
+        onClick={hideDeleteDialog}
+        className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={deleteUser}
+        className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition"
+      >
+        Delete
+      </button>
     </div>
   );
 
-  // Rendering the table
   return (
-    <div className="p-5 table-scroll-wrapper">
+    <div className="p-5">
+      <ToastContainer />
+      <div className="table-scroll-wrapper">
         <DataTable
           value={data}
           scrollable
-          dataKey="ID"
+          dataKey="id"
           paginator
-          first={first} // Controlled pagination
+          first={first}
           rows={rows}
           onPage={onPage}
           scrollHeight="700px"
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate="Showing 1 to 10 of 50 entries"
-          tableStyle={{ minWidth: "200rem" }}
-          className="custom-paginator" 
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+          tableStyle={{ minWidth: "150rem" }}
         >
-          <Column
-            header={headerCheckbox()}
-            body={rowCheckbox}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            header={renderHeader("Actions", HeaderIcon)}
-            body={ActionButton}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            header={renderHeader("ID", HeaderIcon)}
-            field="ID"
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            header={renderHeader("Email", HeaderIcon)}
-            field="Email"
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Google ID"
-            header={renderHeader("Google ID", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Apple ID"
-            header={renderHeader("Apple ID", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Phone Number"
-            header={renderHeader("Phone Number", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Full Name"
-            header={renderHeader("Full Name", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Password"
-            header={renderHeader("Password", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Status"
-            header={renderHeader("Status", HeaderIcon)}
-            body={StatusCheck}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="EmailVerified"
-            header={renderHeader("Email Verified", HeaderIcon)}
-            body={CheckVerification}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="PhoneVerified"
-            header={renderHeader("Phone Verified", HeaderIcon)}
-            body={PhoneVerification}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Date Created"
-            header={renderHeader("Date Created", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Last Update"
-            header={renderHeader("Last Update", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Role"
-            header={renderHeader("Role", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="OTP"
-            header={renderHeader("OTP", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Device Token"
-            header={renderHeader("Device Token", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            field="Total Listings"
-            header={renderHeader("Total Listings", HeaderIcon)}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
+          <Column header={headerCheckbox()} body={rowCheckbox} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Actions" body={ActionButton} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="ID" field="id" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Email" field="email" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Google ID" field="google_id" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Apple ID" field="apple_id" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Phone Number" field="phone_number" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Full Name" field="name" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Status" body={StatusCheck} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Email Verified" body={CheckVerification} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Phone Verified" body={PhoneVerification} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Date Created" field="created_at" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Last Update" field="updated_at" headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
+          <Column header="Role" body={RoleDisplay} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
         </DataTable>
+
+        <Dialog 
+          visible={deleteDialogVisible}
+          onHide={hideDeleteDialog}
+          modal
+          closable={false}
+          className="rounded-xl"
+          style={{ width: '400px', borderRadius: '12px', backgroundColor: '#f8f9fa' }}
+          footer={deleteDialogFooter}
+        >
+          <div className="text-center text-lg text-gray-800 bg-slate-400 p-4 rounded-lg">
+            <p>Are you sure you want to delete this user?</p>
+          </div>
+        </Dialog>
+      </div>
     </div>
   );
 }

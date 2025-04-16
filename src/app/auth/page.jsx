@@ -2,15 +2,48 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { LoginApi } from "@/app/API/method";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.preventDefault();
-    router.push("/pages/dashboard");
+    setIsLoading(true);
+    
+    try {
+      const response = await LoginApi("/admin-panel/login", {
+        email,
+        password,
+      });
+
+      console.log("Full response:", response); // For debugging
+      
+      // Check if response exists and has data
+      if (!response || !response.data) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Handle different possible response structures
+      const token = response.data?.token?.access || 
+                   response.data?.access_token || 
+                   response.data?.data?.token?.access;
+
+      if (!token) {
+        throw new Error("Token not found in response");
+      }
+      localStorage.setItem("token", token);
+      router.push("/pages/dashboard");
+      
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert(error.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,9 +74,12 @@ function Login() {
               />
               <button
                 type="submit"
-                className="w-[300px] bg-black text-white text-[17px] font-normal px-6 py-3 rounded-md font-plus"
+                disabled={isLoading}
+                className={`w-[300px] bg-black text-white text-[17px] font-normal px-6 py-3 rounded-md font-plus ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                Login
+                {isLoading ? "Logging in..." : "Login"}
               </button>
             </div>
           </form>
@@ -61,11 +97,11 @@ const ImageSection = () => {
     <div className="col-span-6 relative h-screen overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-end">
         <Image
-          src="/images/2.png" // Use relative paths for images
+          src="/images/2.png"
           alt="login1"
           className="absolute right-[50px] top-0 max-h-full h-full object-cover"
-          width={500} // Adjust width as necessary
-          height={500} // Adjust height as necessary
+          width={500}
+          height={500}
         />
         <Image
           src="/images/3.png"
