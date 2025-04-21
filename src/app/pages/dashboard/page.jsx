@@ -5,7 +5,7 @@ import DashboardCards from "@/app/components/Dashboard/DashboardCards";
 import DataChart from "@/app/components/Dashboard/DataChart";
 import HalfPieChart from "@/app/components/Dashboard/HalfPieChart";
 import ActiveUsers from "@/app/components/Dashboard/ActiveUsers";
-import Banner from "@/app/components/Dashboard/Banner";
+import Banner from "@/app/components/Dashboard/banner";
 const Dashboard = () => {
   return (
     <div className="flex">
