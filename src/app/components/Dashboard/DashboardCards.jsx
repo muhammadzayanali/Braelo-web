@@ -10,18 +10,18 @@ const DashboardCards = () => {
       to: "/Listing",
     },
     { id: 2, title: "Total Users", img: "/ads.svg", to: "/User" },
-    {
-      id: 3,
-      title: "Total Tickets",
-      img: "/Loading, Plus, Circle, Add.svg",
-      to: "/Support",
-    },
-    {
-      id: 4,
-      title: "Total Businesses",
-      img: "/postimg.svg",
-      to: "/Business",
-    },
+    // {
+    //   id: 3,
+    //   title: "Total Tickets",
+    //   img: "/Loading, Plus, Circle, Add.svg",
+    //   to: "/Support",
+    // },
+    // {
+    //   id: 4,
+    //   title: "Total Businesses",
+    //   img: "/postimg.svg",
+    //   to: "/Business",
+    // },
   ];
 
   return (
@@ -35,7 +35,7 @@ const DashboardCards = () => {
             key={card.id}
             className=" p-6 bg-[#feefcb] border border-gray-100 rounded-lg shadow"
           >
-            <div className="flex gap-5">
+            <div className="flex flex-col justify-center items-center gap-5">
               <Image
                 src={card.img} 
                 alt="image"

@@ -30,7 +30,7 @@ const NavBar = () => {
   }, []);
 
   return (
-    <div className="border-b">
+    <div className="border-b rounded-l-lg">
       <div className="grid grid-cols-12 gap-4 p-5">
         <div className="col-span-8">
           <div className="flex items-center border rounded-full p-2 mt-1 bg-[#F6F8FB]">

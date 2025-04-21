@@ -57,3 +57,16 @@ export const updateData = async (endpoint, data) => {
     throw error;
   }
 };
+
+ export const deleteData = async (endpoint, data) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}${endpoint}`, {
+      headers: getAuthHeaders(),
+      data: data
+    });
+    return response.data;
+  } catch (error) {
+    console.error('DELETE Error:', error);
+    throw error;
+  }
+}

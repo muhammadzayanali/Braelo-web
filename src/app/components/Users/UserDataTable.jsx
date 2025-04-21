@@ -252,3 +252,12 @@ export default function UserTable() {
     </div>
   );
 }
+
+export const fetchUsers = async () => {
+  try {
+    const response = await getData(API_URL);
+    setData(response.data.results || []);
+  } catch (error) {
+    showToast("error", "Failed to fetch users");
+  }
+};

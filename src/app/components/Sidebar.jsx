@@ -32,8 +32,8 @@ const Sidebar = () => {
 
   return (
     <div className="flex flex-col w-64 bg-[#3a4248] h-screen scroll">
-      <div className="bg-[#3a4248]">
-        <div className="w-full">
+      <div className="bg-[#3a4248] ">
+        <div className="">
           {/* Logo Section */}
           <div className="bg-[#FFCC35] flex justify-center p-8">
             <Image

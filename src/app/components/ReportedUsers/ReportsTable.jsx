@@ -3,6 +3,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button"; // Import Button component
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
+import { getData } from "@/app/API/method";
 
 export default function ReportsTable() {
   const [reports, setReports] = useState([]);
@@ -110,8 +111,25 @@ export default function ReportsTable() {
     },
   ];
 
-  useEffect(() => {
-    setReports(sampleData);
+  useEffect(async () =>  {
+    const data = await getData("/admin-panel/report/action");
+    console.log("API Response:", data);
+    setReports(data.data.results || []);
+    if (data?.data?.results) {
+      const formattedReports = data.data.results.map((report, index) => ({
+        id: report.id || index + 1,
+        ReportedTo: report.reported_to_user || "No Title",
+        ReportedBy: report.reported_by_user || "No Message",
+        description: report.issue_description || "No Description",
+        status: report.status || "Pending",
+        Reason: report.Reason || "No Reason",
+        DateCreated: report.DateCreated || new Date().toISOString(),
+      }));
+      setReports(formattedReports);
+    }
+    else {
+      throw new Error("Invalid reports data structure");
+    }
   }, []);
 
   const actionBodyTemplate = (rowData) => {

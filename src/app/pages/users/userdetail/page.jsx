@@ -24,12 +24,22 @@ const Userdetail = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
  useEffect(() => {
-     // Retrieve the business data from sessionStorage
      const storedData = sessionStorage.getItem('currentUserData');
      if (storedData) {
       setUserData(JSON.parse(storedData));
      }
    }, []);
+
+   useEffect(() => {
+    const handleDataUpdate = () => {
+      const updatedData = sessionStorage.getItem("currentUserData");
+      setUserData(JSON.parse(updatedData));
+    };
+    window.addEventListener("userData", handleDataUpdate);
+    return () => {
+      window.removeEventListener("userData", handleDataUpdate);
+    };
+  }, [userData]);
 
   const OpeModal = () => {
     setEditModalOpen(!isModalOpen);

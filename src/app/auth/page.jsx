@@ -110,13 +110,28 @@ const ImageSection = () => {
           width={500}
           height={500}
         />
-        <Image
-          src="/images/1.png"
-          alt="login3"
-          className="absolute right-0 top-0 max-h-full h-full rounded-lg object-cover"
-          width={500}
-          height={500}
-        />
+        <div>
+          <Image
+            src="/images/1.png"
+            alt="login3"
+            className="absolute right-0 top-0 max-h-full h-full rounded-lg object-cover"
+            width={500}
+            height={500}
+          />
+          <h2 className="relative z-50 text-white bottom-52 right-64 w-44 text-xl p-0">
+            Somos a <span className="font-bold">conexão</span> entre negócios,{" "}
+            <span className="font-semibold">pessoas e sonhos</span>
+          </h2>
+          <div>
+            <Image
+              src="/images/white logo.png"
+              alt="login4"
+              className="relative z-50 text-white top-52 right-64 "
+              width={180}
+              height={180}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
