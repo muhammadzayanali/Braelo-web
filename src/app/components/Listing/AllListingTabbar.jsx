@@ -5,7 +5,7 @@ import { Navigation } from "swiper/modules"; // Import the Navigation module
 import "swiper/css";
 import "swiper/css/navigation"; // Import the CSS for navigation
 import Vehicles from "./Vehicles";
-import RealState from "./RealState";
+import RealState from "./realstate";
 import Events from "./events";
 import Job from "./job";
 import Electronics from "./electronics";
