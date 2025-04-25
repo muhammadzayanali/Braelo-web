@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
+import { getData, postData, updateData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
-const Vehicles = () => {
+const Electronics = () => {
   // State management
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -54,7 +54,7 @@ const Vehicles = () => {
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/vehicles?page=${page}`);
+      const response = await getData(`/listing/paginate/electronics?page=${page}`);
       
       if (response?.data) {
         setData(
@@ -149,14 +149,14 @@ const Vehicles = () => {
       ...originalData,
       negotiable: originalData?.negotiable || "NO",
       condition: originalData?.condition || "USED",
-      category: originalData?.category || "Vehicles",
-      subcategory: originalData?.subcategory || "Cars",
-      make: originalData?.make || "",
-      model: originalData?.model || "",
-      year: originalData?.year || "",
-      color: originalData?.color || "",
-      listing_coordinates: JSON.stringify(coordinates),
-      location: address
+      warranty: originalData?.warranty || "NO",
+      category: originalData?.category || "Electronics",
+      subcategory: originalData?.subcategory || "Smartphones",
+      from_business: originalData?.from_business || "false",
+      service_type: originalData?.service_type || "",
+      brand: originalData?.brand || "",
+      location: address,
+      listing_coordinates: JSON.stringify(coordinates)
     });
     
     // Handle image previews
@@ -315,18 +315,19 @@ const Vehicles = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Vehicles');
-      form.append("subcategory", formData.subcategory || 'Cars');
+      form.append("category", formData.category || 'Electronics');
+      form.append("subcategory", formData.subcategory || 'Smartphones');
       form.append("title", formData.title || '');
       form.append("description", formData.description || '');
       form.append("location", formData.location || '');
-      form.append("make", formData.make || '');
-      form.append("model", formData.model || '');
-      form.append("year", formData.year || '');
-      form.append("color", formData.color || '');
+      form.append("service_type", formData.service_type || '');
       form.append("price", String(formData.price || 0));
       form.append("negotiable", formData.negotiable || 'NO');
       form.append("condition", formData.condition || 'USED');
+      form.append("warranty", formData.warranty || 'NO');
+      form.append("model", formData.model || '');
+      form.append("brand", formData.brand || '');
+      form.append("from_business", formData.from_business || 'false');
       form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
       
       // Handle keywords
@@ -345,8 +346,8 @@ const Vehicles = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/vehicles/${listingId}`,
+      await updateData(
+        `/admin-panel/electronics/${listingId}`,
         form,
         {
           headers: {
@@ -355,12 +356,12 @@ const Vehicles = () => {
         }
       );
       
-      toast.success("Listing updated successfully!");
+      toast.success("Electronics listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      let errorMsg = "Failed to update listing";
+      let errorMsg = "Failed to update electronics listing";
       
       if (error.response) {
         if (error.response.status === 404) {
@@ -385,16 +386,16 @@ const Vehicles = () => {
     try {
       const form = new FormData();
       form.append('listing_id', listingData.id || '');
-      form.append('category', 'Vehicles');
+      form.append('category', 'Electronics');
 
       await deleteData("/admin-panel/delete", form);
 
       await fetchData(pagination.currentPage);
-      toast.success("Listing deleted successfully!");
+      toast.success("Electronics listing deleted successfully!");
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error(error.response?.data?.message || "Failed to delete listing");
+      toast.error(error.response?.data?.message || "Failed to delete electronics listing");
     }
   };
 
@@ -402,10 +403,6 @@ const Vehicles = () => {
   const formFields = [
     { name: 'title', label: 'Title', type: 'text', required: true },
     { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'make', label: 'Make', type: 'text', required: true },
-    { name: 'model', label: 'Model', type: 'text', required: true },
-    { name: 'year', label: 'Year', type: 'number', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
     { name: 'price', label: 'Price', type: 'number', required: true },
     { 
       name: 'negotiable', 
@@ -421,9 +418,31 @@ const Vehicles = () => {
       options: ['NEW', 'USED', 'REFURBISHED'],
       required: true 
     },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
-    { name: 'category', label: 'Category', type: 'text', required: true },
-    { name: 'subcategory', label: 'Subcategory', type: 'text', required: true }
+    { 
+      name: 'warranty', 
+      label: 'Warranty', 
+      type: 'select', 
+      options: ['YES', 'NO'],
+      required: true 
+    },
+    { name: 'model', label: 'Model', type: 'text', required: true },
+    { name: 'brand', label: 'Brand', type: 'text', required: true },
+    { name: 'service_type', label: 'Service Type', type: 'text', required: true },
+    { 
+      name: 'subcategory', 
+      label: 'Subcategory', 
+      type: 'select', 
+      options: ['Smartphones', 'Computers & Tablets', 'TV & Home Theater', 'Cameras & Camcorders', 'Audio', 'Services & Parts', 'Other Electronics'],
+      required: true 
+    },
+    { 
+      name: 'from_business', 
+      label: 'From Business', 
+      type: 'select', 
+      options: ['true', 'false'],
+      required: true 
+    },
+    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false }
   ];
 
   if (loading) {
@@ -458,7 +477,7 @@ const Vehicles = () => {
           </button>
         </div>
 
-        {/* Vehicle Listings */}
+        {/* Electronics Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
@@ -483,7 +502,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Vehicle Details</h2>
+                <h2 className="text-xl font-semibold">Electronics Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -505,26 +524,32 @@ const Vehicles = () => {
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.make && (
-                      <DetailItem label="Make" value={selectedCard.make} />
-                    )}
                     {selectedCard?.model && (
                       <DetailItem label="Model" value={selectedCard.model} />
                     )}
-                    {selectedCard?.year && (
-                      <DetailItem label="Year" value={selectedCard.year} />
-                    )}
-                    {selectedCard?.color && (
-                      <DetailItem label="Color" value={selectedCard.color} />
+                    {selectedCard?.brand && (
+                      <DetailItem label="Brand" value={selectedCard.brand} />
                     )}
                     {selectedCard?.condition && (
                       <DetailItem label="Condition" value={selectedCard.condition} />
+                    )}
+                    {selectedCard?.warranty && (
+                      <DetailItem label="Warranty" value={selectedCard.warranty} />
+                    )}
+                    {selectedCard?.service_type && (
+                      <DetailItem label="Service Type" value={selectedCard.service_type} />
                     )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
                     )}
                     {selectedCard?.negotiable && (
                       <DetailItem label="Negotiable" value={selectedCard.negotiable} />
+                    )}
+                    {selectedCard?.subcategory && (
+                      <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                    )}
+                    {selectedCard?.from_business && (
+                      <DetailItem label="From Business" value={selectedCard.from_business} />
                     )}
                     {selectedCard?.listing_coordinates && (
                       <DetailItem
@@ -547,7 +572,7 @@ const Vehicles = () => {
                         <img
                           key={index}
                           src={img}
-                          alt={`Vehicle ${index}`}
+                          alt={`Electronics ${index}`}
                           className="w-32 h-32 object-cover rounded-md border"
                         />
                       ))}
@@ -564,7 +589,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
+                <h2 className="text-xl font-semibold">Delete Electronics</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -575,7 +600,7 @@ const Vehicles = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This action cannot be undone.
+                  Are you sure you want to delete this electronics listing? This action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -604,7 +629,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Electronics Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -618,7 +643,7 @@ const Vehicles = () => {
                 {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Images
+                    Electronics Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
@@ -664,7 +689,7 @@ const Vehicles = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your vehicle (max 10 images)
+                    Upload high-quality images of your electronics (max 10 images)
                   </p>
                 </div>
 
@@ -700,14 +725,6 @@ const Vehicles = () => {
                           required={field.required}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                           rows={3}
-                        />
-                      ) : field.type === "checkbox" ? (
-                        <input
-                          type="checkbox"
-                          name={field.name}
-                          checked={formData[field.name] || false}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                       ) : (
                         <input
@@ -835,4 +852,4 @@ const DetailItem = ({ label, value }) => {
   );
 };
 
-export default Vehicles;
+export default Electronics;

@@ -11,26 +11,24 @@ const ListingCard = ({
   onIconClick,
 }) => {
   return (
-    <div className="relative bg-white border border-gray-400 rounded-[24px] shadow-sm overflow-hidden p-3">
+    <div className="relative bg-white border border-gray-400 rounded-[24px] shadow-sm overflow-hidden p-3 w-[250px]">
       {/* Image Section */}
-      <Image
+      <img
         src={image} // Dynamic image source
         alt={title} // Alt text for the image
-        width={400} // Set the width of the image
-        height={300} // Set the height of the image
-        className="w-full object-cover rounded" // Tailwind CSS classes for styling
+        className="w-full object-cover rounded-xl" // Tailwind CSS classes for styling
       />
       {/* Overlay for Icons */}
       <div className="absolute top-8 right-5 flex space-x-2">
         {icons.map((icon, index) => (
           <Image
             key={index}
-            src={icon}
-            alt="icon"
+            src={icon} // Use the actual icon path from the array
+            alt={`icon-${index}`}
             width={24}
             height={24}
             className="cursor-pointer"
-            onClick={() => onIconClick(icon)} // Triggering the onIconClick function
+            onClick={() => onIconClick(icon)}
           />
         ))}
       </div>
@@ -48,13 +46,13 @@ const ListingCard = ({
       </div>
 
       {/* Stats Section */}
-      <div className="flex gap-2  mt-3">
+      <div className="flex gap-2 mt-3">
         <div className="flex items-center w-[120px]">
           <Image src="/e1.png" alt="views" width={10} height={10} />
           <p className="text-[#9D9D9D] text-[12px] font-[300]">120 Views</p>
         </div>
         <div className="flex items-center w-[120px]">
-          <Image src="/e2.png" alt="saves" width={10} height={10} />
+          <Image src="/e2.png" alt="saves" width={12} height={10} />
           <p className="text-[#9D9D9D] text-[12px] font-[300]">100 Saves</p>
         </div>
         <div className="flex items-center w-[120px]">

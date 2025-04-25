@@ -1,5 +1,5 @@
 export const FormData = {
-  vehicles: {
+  Vehicles: {
     commonFields: [
       { label: "Choose Image", type: "file", name: "image" },
       { label: "Ad Title", type: "text", name: "title" },
@@ -11,20 +11,21 @@ export const FormData = {
       { label: "Color", type: "text", name: "color" },
       { label: "Fuel Type", type: "text", name: "fuelType" },
       { label: "Description", type: "textarea", name: "description" },
+      { label: "keywords", type: "text", name: "keywords" },
     ],
-    cars: {
+    Cars: {
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Number of Doors", options: ["1/3", "4", "3"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
-        { label: "Negotiable", options: ["Yes", "No"] },
+        { label: "negotiable", options: ["YES", "NO"] },
       ],
     },
-    motorcycle: {
+    Motorcycle: {
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -33,7 +34,7 @@ export const FormData = {
       fields: [{ label: "Load Capcity", type: "text", name: "loadcapcity" }],
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -42,7 +43,7 @@ export const FormData = {
       fields: [{ label: "Type", type: "text", name: "type" }],
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -51,7 +52,7 @@ export const FormData = {
       fields: [{ label: "Length", type: "text", name: "length" }],
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -60,7 +61,7 @@ export const FormData = {
       fields: [{ label: "Passenger Capacity", type: "text", name: "length" }],
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -68,7 +69,7 @@ export const FormData = {
     scooter: {
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -87,7 +88,7 @@ export const FormData = {
       ],
       chips: [
         { label: "Transmission", options: ["Manual", "Automatic"] },
-        { label: "Condition", options: ["New", "Used"] },
+        { label: "condition", options: ["New", "Used"] },
         { label: "Purpose", options: ["Sale", "Rental"] },
         { label: "For Sale", options: ["Yes", "No"] },
         { label: "Rentals", options: ["Yes", "No"] },
@@ -118,7 +119,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Basement", options: ["YES", "NO"] },
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
         { label: "Lease Terms", options: ["DURATION", "RENWAL"] },
@@ -165,7 +166,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Basement", options: ["YES", "NO"] },
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
         { label: "Lease Terms", options: ["DURATION", "RENWAL"] },
@@ -207,7 +208,7 @@ export const FormData = {
       ],
       chips: [
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -223,7 +224,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Basement", options: ["YES", "NO"] },
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
         { label: "Lease Terms", options: ["DURATION", "RENWAL"] },
@@ -271,7 +272,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Basement", options: ["YES", "NO"] },
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
         { label: "Lease Terms", options: ["DURATION", "RENWAL"] },
@@ -352,7 +353,7 @@ export const FormData = {
       fields: [{ label: "Price", type: "text", name: "price" }],
       chips: [
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -360,7 +361,7 @@ export const FormData = {
       fields: [{ label: "Price", type: "text", name: "price" }],
       chips: [
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -371,7 +372,7 @@ export const FormData = {
       ],
       chips: [
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -379,7 +380,7 @@ export const FormData = {
       fields: [{ label: "Price", type: "text", name: "price" }],
       chips: [
         { label: "Furnished", options: ["UNFURNISHED", "FURNISHED"] },
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -401,7 +402,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -413,7 +414,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -424,7 +425,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -435,7 +436,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -446,7 +447,7 @@ export const FormData = {
         { label: "Price", type: "text", name: "price" },
       ],
       chips: [
-        { label: "Condition", options: ["NEW", "USED"] },
+        { label: "condition", options: ["NEW", "USED"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
@@ -573,7 +574,7 @@ export const FormData = {
       ],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -585,7 +586,7 @@ export const FormData = {
       ],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -597,7 +598,7 @@ export const FormData = {
       ],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -607,7 +608,7 @@ export const FormData = {
 
       chips: [
         { label: "Mattress Included", options: ["Yes", "No"] },
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -619,7 +620,7 @@ export const FormData = {
       ],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -640,7 +641,7 @@ export const FormData = {
       fields: [{ label: "Gender", type: "text", name: "processor" }],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -649,7 +650,7 @@ export const FormData = {
       fields: [{ label: "Shoe Type", type: "text", name: "processor" }],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -658,7 +659,7 @@ export const FormData = {
       fields: [{ label: "Type", type: "text", name: "processor" }],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -671,7 +672,7 @@ export const FormData = {
 
       chips: [
         { label: "Mattress Included", options: ["Yes", "No"] },
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -680,7 +681,7 @@ export const FormData = {
       fields: [{ label: "Gem Stone", type: "text", name: "processor" }],
 
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Donation", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
@@ -828,38 +829,38 @@ export const FormData = {
     ],
     sportsequipment: {
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
     musicalinstruments: {
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
     collecteditems: {
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
     games: {
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
     camping: {
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },
     outdooractivities: {
       fields: [{ label: "Activity Type", type: "text", name: "processor" }],
       chips: [
-        { label: "Condition", options: ["Yes", "No"] },
+        { label: "condition", options: ["Yes", "No"] },
         { label: "Negotiable", options: ["Yes", "No"] },
       ],
     },

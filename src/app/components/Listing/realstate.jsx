@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
-import CardToggle from "./CardToggle";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Image from "next/image";
+import { getData, postData, updateListData, deleteData } from '@/app/API/method';
 import ListingCard from "./LisitngCard";
+import CardToggle from "./CardToggle";
 
-const Vehicles = () => {
-  // State management
+const RealEstate = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -25,8 +25,9 @@ const Vehicles = () => {
   const [autocomplete, setAutocomplete] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Load Google Maps script
   useEffect(() => {
+    fetchData();
+    // Load Google Maps script
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDy-uoC7NTV52ghbZu7bDQT6M227FigwjI&libraries=places`;
@@ -37,25 +38,13 @@ const Vehicles = () => {
     } else {
       setMapLoaded(true);
     }
-    
-    fetchData();
-    
-    return () => {
-      // Clean up image preview URLs
-      imagePreviews.forEach(preview => {
-        if (preview.isNew) {
-          URL.revokeObjectURL(preview.preview);
-        }
-      });
-    };
   }, []);
 
-  // Fetch data with pagination
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/vehicles?page=${page}`);
-      
+      const response = await getData(`/listing/paginate/realestate?page=${page}`);
+
       if (response?.data) {
         setData(
           response.data.results.map((item) => ({
@@ -86,46 +75,18 @@ const Vehicles = () => {
       console.error("Error fetching data:", error);
       toast.error(error.response?.data?.message || "Failed to load listings");
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
+        console.log("Redirecting to login page...");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Reverse geocode coordinates to address
-  const reverseGeocode = async (coordinates) => {
-    if (!mapLoaded || !window.google) return;
-    
-    try {
-      const geocoder = new window.google.maps.Geocoder();
-      const latLng = {
-        lat: coordinates[1],
-        lng: coordinates[0]
-      };
-
-      return new Promise((resolve) => {
-        geocoder.geocode({ location: latLng }, (results, status) => {
-          if (status === "OK" && results[0]) {
-            resolve(results[0].formatted_address);
-          } else {
-            resolve(null);
-          }
-        });
-      });
-    } catch (error) {
-      console.error("Error in reverse geocoding:", error);
-      return null;
-    }
-  };
-
-  // Handle edit click
-  const handleEditClick = async (card) => {
+  const handleEditClick = (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
-    
-    // Parse coordinates
     let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
+    
     try {
       if (originalData.listing_coordinates) {
         coordinates = typeof originalData.listing_coordinates === 'string' 
@@ -136,30 +97,20 @@ const Vehicles = () => {
       console.error("Error parsing coordinates:", e);
     }
 
-    // Get address from coordinates
-    let address = originalData.location || "";
-    if (coordinates.coordinates && coordinates.coordinates.length === 2) {
-      const geocodedAddress = await reverseGeocode(coordinates.coordinates);
-      if (geocodedAddress) {
-        address = geocodedAddress;
-      }
-    }
-
     setFormData({
       ...originalData,
       negotiable: originalData?.negotiable || "NO",
       condition: originalData?.condition || "USED",
-      category: originalData?.category || "Vehicles",
-      subcategory: originalData?.subcategory || "Cars",
-      make: originalData?.make || "",
-      model: originalData?.model || "",
-      year: originalData?.year || "",
-      color: originalData?.color || "",
+      subcategory: originalData?.subcategory || "Commercial",
+      category: originalData?.category || "Real Estate",
+      property_type: originalData?.property_type || "Farm",
+      lease_terms: originalData?.lease_terms || "LONG-TERM",
+      land_type: originalData?.land_type || "Rural",
+      from_business: originalData?.from_business || "false",
+      location: originalData?.location || "",
       listing_coordinates: JSON.stringify(coordinates),
-      location: address
     });
-    
-    // Handle image previews
+
     if (originalData.pictures && originalData.pictures.length > 0) {
       setImagePreviews(
         originalData.pictures.map((pic) => ({
@@ -170,10 +121,9 @@ const Vehicles = () => {
     } else {
       setImagePreviews([]);
     }
-    
+
     setIsEditModalOpen(true);
 
-    // Initialize Google Maps autocomplete after a slight delay
     setTimeout(() => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
@@ -210,7 +160,6 @@ const Vehicles = () => {
     }, 500);
   };
 
-  // Modal handlers
   const handleOpenDetail = (card) => {
     setSelectedCard(card.originalData || card);
     setIsDetailModalOpen(true);
@@ -239,56 +188,27 @@ const Vehicles = () => {
     setSelectedCard(null);
   };
 
-  // Form handlers
   const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
-  };
-
-  const isValidImage = (file) => {
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    
-    if (!validTypes.includes(file.type)) {
-      toast.error(`Invalid file type: ${file.type}`);
-      return false;
-    }
-    
-    if (file.size > MAX_SIZE) {
-      toast.error(`File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`);
-      return false;
-    }
-    
-    return true;
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    const MAX_IMAGES = 10;
-    
-    if (files.length + imagePreviews.length > MAX_IMAGES) {
-      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
-      return;
-    }
-    
-    const validFiles = files.filter(file => isValidImage(file));
-    
-    if (validFiles.length > 0) {
-      const newImagePreviews = validFiles.map(file => ({
+
+    if (files.length > 0) {
+      const newImagePreviews = files.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
-        isNew: true
+        isNew: true,
       }));
-      
-      setImagePreviews(prev => [...prev, ...newImagePreviews]);
+
+      setImagePreviews((prev) => [...prev, ...newImagePreviews]);
     }
   };
 
   const removeImage = (index) => {
-    setImagePreviews(prev => {
+    setImagePreviews((prev) => {
       const newPreviews = [...prev];
       if (newPreviews[index].isNew) {
         URL.revokeObjectURL(newPreviews[index].preview);
@@ -298,15 +218,14 @@ const Vehicles = () => {
     });
   };
 
-  // API operations
   const handleUpdateListing = async (e) => {
     e.preventDefault();
     if (!selectedCard) return;
-    
+
     try {
       setIsUpdating(true);
       const listingId = selectedCard.originalData?.id || selectedCard.id;
-      
+
       if (!listingId) {
         toast.error("Invalid listing ID");
         return;
@@ -314,26 +233,41 @@ const Vehicles = () => {
 
       const form = new FormData();
 
-      // Append all form data
-      form.append("category", formData.category || 'Vehicles');
-      form.append("subcategory", formData.subcategory || 'Cars');
-      form.append("title", formData.title || '');
-      form.append("description", formData.description || '');
-      form.append("location", formData.location || '');
-      form.append("make", formData.make || '');
-      form.append("model", formData.model || '');
-      form.append("year", formData.year || '');
-      form.append("color", formData.color || '');
+      // Append all fields to form
+      form.append("category", formData.category || "Real Estate");
+      form.append("subcategory", formData.subcategory || "Commercial");
+      form.append("title", formData.title || "");
+      form.append("description", formData.description || "");
+      form.append("location", formData.location || "");
+      form.append("property_type", formData.property_type || "Farm");
+      form.append("size", String(formData.size || "10.0"));
+      form.append("condition", formData.condition || "USED");
       form.append("price", String(formData.price || 0));
-      form.append("negotiable", formData.negotiable || 'NO');
-      form.append("condition", formData.condition || 'USED');
-      form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
+      form.append("negotiable", formData.negotiable || "NO");
+      form.append("lease_terms", formData.lease_terms || "LONG-TERM");
+      form.append("land_type", formData.land_type || "Rural");
+      form.append("number_of_floors", String(formData.number_of_floors || "1"));
+      form.append("bathrooms", String(formData.bathrooms || "1"));
+      form.append("bedrooms", String(formData.bedrooms || "1"));
+      form.append("from_business", formData.from_business || "false");
       
+      // Use the coordinates from formData or default
+      form.append(
+        "listing_coordinates",
+        formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}'
+      );
+
       // Handle keywords
       if (formData.keywords) {
-        form.append("keywords", Array.isArray(formData.keywords) 
-          ? formData.keywords.join(',') 
-          : formData.keywords);
+        const keywordsArray = Array.isArray(formData.keywords) 
+          ? formData.keywords 
+          : formData.keywords.split(',').map(kw => kw.trim());
+        
+        keywordsArray.forEach((kw, index) => {
+          form.append(`keywords[${index}]`, kw);
+        });
+      } else {
+        form.append("keywords[0]", "property");
       }
 
       // Handle images
@@ -341,51 +275,32 @@ const Vehicles = () => {
         if (img.isNew) {
           form.append(`pictures`, img.file);
         } else {
-          form.append(`existingPictures[${index}]`, img.url);
+          form.append(`pictures[${index}]`, img.url);
         }
       });
 
-      await updateListData(
-        `/admin-panel/vehicles/${listingId}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
-      );
-      
+      await updateListData(`/admin-panel/realestate/${listingId}`, form);
+
       toast.success("Listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      let errorMsg = "Failed to update listing";
-      
-      if (error.response) {
-        if (error.response.status === 404) {
-          errorMsg = "Resource not found (404) - please check the endpoint";
-        } else if (error.response.data?.message) {
-          errorMsg = error.response.data.message;
-        } else if (error.response.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).join(', ');
-        }
-      }
-      
-      toast.error(errorMsg);
+      toast.error(error.response?.data?.message || "Failed to update listing");
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDeleteListing = async () => {
-    const listingData = selectedCard?.originalData || selectedCard;
-    if (!listingData) return;
-    
+    if (!selectedCard) return;
+
+    const listingData = selectedCard.originalData || selectedCard;
+
     try {
       const form = new FormData();
-      form.append('listing_id', listingData.id || '');
-      form.append('category', 'Vehicles');
+      form.append("listing_id", listingData.id || "");
+      form.append("category", "Real Estate");
 
       await deleteData("/admin-panel/delete", form);
 
@@ -398,39 +313,54 @@ const Vehicles = () => {
     }
   };
 
-  // Form fields configuration
   const formFields = [
-    { name: 'title', label: 'Title', type: 'text', required: true },
-    { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'make', label: 'Make', type: 'text', required: true },
-    { name: 'model', label: 'Model', type: 'text', required: true },
-    { name: 'year', label: 'Year', type: 'number', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
-    { name: 'price', label: 'Price', type: 'number', required: true },
-    { 
-      name: 'negotiable', 
-      label: 'Negotiable', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
+    { name: "title", label: "Title", type: "text", required: true },
+    { name: "description", label: "Description", type: "text", required: true },
+    { name: "price", label: "Price", type: "number", required: true },
+    {
+      name: "negotiable",
+      label: "Negotiable",
+      type: "select",
+      options: ["YES", "NO"],
+      required: true,
     },
-    { 
-      name: 'condition', 
-      label: 'Condition', 
-      type: 'select', 
-      options: ['NEW', 'USED', 'REFURBISHED'],
-      required: true 
+    {
+      name: "condition",
+      label: "Condition",
+      type: "select",
+      options: ["NEW", "USED", "REFURBISHED"],
+      required: true,
     },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
-    { name: 'category', label: 'Category', type: 'text', required: true },
-    { name: 'subcategory', label: 'Subcategory', type: 'text', required: true }
+    { name: "property_type", label: "Property Type", type: "text", required: true },
+    { name: "size", label: "Size", type: "text", required: true },
+    {
+      name: "lease_terms",
+      label: "Lease Terms",
+      type: "select",
+      options: ["LONG-TERM", "SHORT-TERM"],
+      required: true,
+    },
+    {
+      name: "land_type",
+      label: "Land Type",
+      type: "select",
+      options: ["Rural", "Urban", "Suburban"],
+      required: true,
+    },
+    { name: "number_of_floors", label: "Number of Floors", type: "number", required: true },
+    { name: "bathrooms", label: "Bathrooms", type: "number", required: true },
+    { name: "bedrooms", label: "Bedrooms", type: "number", required: true },
+    { name: "subcategory", label: "Subcategory", type: "text", required: true },
+    { name: "category", label: "Category", type: "text", required: true },
+    { name: "from_business", label: "From Business", type: "text", required: true },
   ];
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <>
+        <div className="grid grid-cols-4 gap-3">Loading...</div>
+        <ToastContainer />
+      </>
     );
   }
 
@@ -458,8 +388,8 @@ const Vehicles = () => {
           </button>
         </div>
 
-        {/* Vehicle Listings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Real Estate Listings */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
               key={index}
@@ -483,12 +413,24 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Vehicle Details</h2>
+                <h2 className="text-xl font-semibold">Listing Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
 
@@ -501,24 +443,33 @@ const Vehicles = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price ? selectedCard.price : "Price not set"}
+                    {selectedCard?.price}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.make && (
-                      <DetailItem label="Make" value={selectedCard.make} />
+                    {selectedCard?.property_type && (
+                      <DetailItem label="Property Type" value={selectedCard.property_type} />
                     )}
-                    {selectedCard?.model && (
-                      <DetailItem label="Model" value={selectedCard.model} />
-                    )}
-                    {selectedCard?.year && (
-                      <DetailItem label="Year" value={selectedCard.year} />
-                    )}
-                    {selectedCard?.color && (
-                      <DetailItem label="Color" value={selectedCard.color} />
+                    {selectedCard?.size && (
+                      <DetailItem label="Size" value={selectedCard.size} />
                     )}
                     {selectedCard?.condition && (
                       <DetailItem label="Condition" value={selectedCard.condition} />
+                    )}
+                    {selectedCard?.lease_terms && (
+                      <DetailItem label="Lease Terms" value={selectedCard.lease_terms} />
+                    )}
+                    {selectedCard?.land_type && (
+                      <DetailItem label="Land Type" value={selectedCard.land_type} />
+                    )}
+                    {selectedCard?.number_of_floors && (
+                      <DetailItem label="Number of Floors" value={selectedCard.number_of_floors} />
+                    )}
+                    {selectedCard?.bathrooms && (
+                      <DetailItem label="Bathrooms" value={selectedCard.bathrooms} />
+                    )}
+                    {selectedCard?.bedrooms && (
+                      <DetailItem label="Bedrooms" value={selectedCard.bedrooms} />
                     )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
@@ -544,12 +495,15 @@ const Vehicles = () => {
                     <h4 className="text-md font-medium mb-2">Images</h4>
                     <div className="flex flex-wrap gap-4">
                       {selectedCard.pictures.map((img, index) => (
-                        <img
-                          key={index}
-                          src={img}
-                          alt={`Vehicle ${index}`}
-                          className="w-32 h-32 object-cover rounded-md border"
-                        />
+                        <div key={index} className="relative w-32 h-32">
+                          <Image
+                            src={img}
+                            alt={`Listing ${index}`}
+                            fill
+                            className="object-cover rounded-md border"
+                            unoptimized={!img.startsWith('/')} // Only optimize local images
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -564,18 +518,31 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
+                <h2 className="text-xl font-semibold">Delete Listing</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This action cannot be undone.
+                  Are you sure you want to delete this listing? This action
+                  cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -604,13 +571,25 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Real Estate Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
                   disabled={isUpdating}
                 >
-                  ×
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
 
@@ -618,16 +597,26 @@ const Vehicles = () => {
                 {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Images
+                    Property Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={img.preview || img.url}
-                          alt={`Preview ${index}`}
-                          className="w-24 h-24 object-cover rounded-md border"
-                        />
+                      <div key={index} className="relative group w-24 h-24">
+                        {img.isNew ? (
+                          <img
+                            src={img.preview}
+                            alt={`Preview ${index}`}
+                            className="w-full h-full object-cover rounded-md border"
+                          />
+                        ) : (
+                          <Image
+                            src={img.url}
+                            alt={`Preview ${index}`}
+                            fill
+                            className="object-cover rounded-md border"
+                            unoptimized={!img.url.startsWith('/')}
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
@@ -664,7 +653,7 @@ const Vehicles = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your vehicle (max 10 images)
+                    Upload high-quality images of your property (max 10 images)
                   </p>
                 </div>
 
@@ -674,7 +663,9 @@ const Vehicles = () => {
                     <div key={field.name} className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </label>
 
                       {field.type === "select" ? (
@@ -692,23 +683,6 @@ const Vehicles = () => {
                             </option>
                           ))}
                         </select>
-                      ) : field.type === "textarea" ? (
-                        <textarea
-                          name={field.name}
-                          value={formData[field.name] || ""}
-                          onChange={handleFormChange}
-                          required={field.required}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          rows={3}
-                        />
-                      ) : field.type === "checkbox" ? (
-                        <input
-                          type="checkbox"
-                          name={field.name}
-                          checked={formData[field.name] || false}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
                       ) : (
                         <input
                           type={field.type}
@@ -835,4 +809,4 @@ const DetailItem = ({ label, value }) => {
   );
 };
 
-export default Vehicles;
+export default RealEstate;

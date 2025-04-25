@@ -10,6 +10,13 @@ const getAuthHeaders = () => {
     'Authorization': `Bearer ${token}`
   };
 };
+const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    "Content-Type": "multipart/form-data",
+    'Authorization': `Bearer ${token}`
+  };
+};
 
 export const LoginApi = async (endpoint, data) => {
   try {
@@ -70,3 +77,27 @@ export const updateData = async (endpoint, data) => {
     throw error;
   }
 }
+
+export const updateListData = async (endpoint, data) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}${endpoint}`, data, {
+      headers: getHeaders()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('PUT Error:', error);
+    throw error;
+  }
+};
+
+export const postBusiData = async (endpoint, data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}${endpoint}`, data, {
+      headers: getHeaders()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('POST Error:', error);
+    throw error;
+  }
+};

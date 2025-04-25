@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
+// import { useRouter } from "next/router";
+import { getData, postData, updateData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
-const Vehicles = () => {
+const Jobs = () => {
   // State management
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -54,7 +55,7 @@ const Vehicles = () => {
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/vehicles?page=${page}`);
+      const response = await getData(`/listing/paginate/jobs?page=${page}`);
       
       if (response?.data) {
         setData(
@@ -87,6 +88,7 @@ const Vehicles = () => {
       toast.error(error.response?.data?.message || "Failed to load listings");
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
+        // router.push('/login');
       }
     } finally {
       setLoading(false);
@@ -148,15 +150,11 @@ const Vehicles = () => {
     setFormData({
       ...originalData,
       negotiable: originalData?.negotiable || "NO",
-      condition: originalData?.condition || "USED",
-      category: originalData?.category || "Vehicles",
-      subcategory: originalData?.subcategory || "Cars",
-      make: originalData?.make || "",
-      model: originalData?.model || "",
-      year: originalData?.year || "",
-      color: originalData?.color || "",
-      listing_coordinates: JSON.stringify(coordinates),
-      location: address
+      job_type: originalData?.job_type || "FULL_TIME",
+      category: originalData?.category || "Jobs",
+      subcategory: originalData?.subcategory || "Home Office",
+      location: address,
+      listing_coordinates: JSON.stringify(coordinates)
     });
     
     // Handle image previews
@@ -315,18 +313,16 @@ const Vehicles = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Vehicles');
-      form.append("subcategory", formData.subcategory || 'Cars');
+      form.append("category", formData.category || 'Jobs');
+      form.append("subcategory", formData.subcategory || 'Home Office');
       form.append("title", formData.title || '');
       form.append("description", formData.description || '');
       form.append("location", formData.location || '');
-      form.append("make", formData.make || '');
-      form.append("model", formData.model || '');
-      form.append("year", formData.year || '');
-      form.append("color", formData.color || '');
+      form.append("job_type", formData.job_type || 'FULL_TIME');
+      form.append("company", formData.company || '');
+      form.append("experience_level", formData.experience_level || '');
       form.append("price", String(formData.price || 0));
       form.append("negotiable", formData.negotiable || 'NO');
-      form.append("condition", formData.condition || 'USED');
       form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
       
       // Handle keywords
@@ -345,8 +341,8 @@ const Vehicles = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/vehicles/${listingId}`,
+      await updateData(
+        `/admin-panel/jobs/${listingId}`,
         form,
         {
           headers: {
@@ -355,12 +351,12 @@ const Vehicles = () => {
         }
       );
       
-      toast.success("Listing updated successfully!");
+      toast.success("Job listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      let errorMsg = "Failed to update listing";
+      let errorMsg = "Failed to update job listing";
       
       if (error.response) {
         if (error.response.status === 404) {
@@ -385,28 +381,26 @@ const Vehicles = () => {
     try {
       const form = new FormData();
       form.append('listing_id', listingData.id || '');
-      form.append('category', 'Vehicles');
+      form.append('category', 'Jobs');
 
       await deleteData("/admin-panel/delete", form);
 
       await fetchData(pagination.currentPage);
-      toast.success("Listing deleted successfully!");
+      toast.success("Job listing deleted successfully!");
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error(error.response?.data?.message || "Failed to delete listing");
+      toast.error(error.response?.data?.message || "Failed to delete job listing");
     }
   };
 
   // Form fields configuration
   const formFields = [
-    { name: 'title', label: 'Title', type: 'text', required: true },
-    { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'make', label: 'Make', type: 'text', required: true },
-    { name: 'model', label: 'Model', type: 'text', required: true },
-    { name: 'year', label: 'Year', type: 'number', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
-    { name: 'price', label: 'Price', type: 'number', required: true },
+    { name: 'title', label: 'Job Title', type: 'text', required: true },
+    { name: 'description', label: 'Job Description', type: 'textarea', required: true },
+    { name: 'company', label: 'Company', type: 'text', required: true },
+    { name: 'experience_level', label: 'Experience Level', type: 'text', required: true },
+    { name: 'price', label: 'Salary', type: 'number', required: true },
     { 
       name: 'negotiable', 
       label: 'Negotiable', 
@@ -415,10 +409,10 @@ const Vehicles = () => {
       required: true 
     },
     { 
-      name: 'condition', 
-      label: 'Condition', 
+      name: 'job_type', 
+      label: 'Job Type', 
       type: 'select', 
-      options: ['NEW', 'USED', 'REFURBISHED'],
+      options: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMPORARY', 'INTERNSHIP', 'VOLUNTEER'],
       required: true 
     },
     { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
@@ -458,7 +452,7 @@ const Vehicles = () => {
           </button>
         </div>
 
-        {/* Vehicle Listings */}
+        {/* Job Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
@@ -483,7 +477,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Vehicle Details</h2>
+                <h2 className="text-xl font-semibold">Job Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -501,24 +495,18 @@ const Vehicles = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price ? selectedCard.price : "Price not set"}
+                    {selectedCard?.price ? selectedCard.price : "Salary not set"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.make && (
-                      <DetailItem label="Make" value={selectedCard.make} />
+                    {selectedCard?.company && (
+                      <DetailItem label="Company" value={selectedCard.company} />
                     )}
-                    {selectedCard?.model && (
-                      <DetailItem label="Model" value={selectedCard.model} />
+                    {selectedCard?.experience_level && (
+                      <DetailItem label="Experience Level" value={selectedCard.experience_level} />
                     )}
-                    {selectedCard?.year && (
-                      <DetailItem label="Year" value={selectedCard.year} />
-                    )}
-                    {selectedCard?.color && (
-                      <DetailItem label="Color" value={selectedCard.color} />
-                    )}
-                    {selectedCard?.condition && (
-                      <DetailItem label="Condition" value={selectedCard.condition} />
+                    {selectedCard?.job_type && (
+                      <DetailItem label="Job Type" value={selectedCard.job_type} />
                     )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
@@ -536,6 +524,9 @@ const Vehicles = () => {
                         }
                       />
                     )}
+                    {selectedCard?.subcategory && (
+                      <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                    )}
                   </div>
                 </div>
 
@@ -547,7 +538,7 @@ const Vehicles = () => {
                         <img
                           key={index}
                           src={img}
-                          alt={`Vehicle ${index}`}
+                          alt={`Job ${index}`}
                           className="w-32 h-32 object-cover rounded-md border"
                         />
                       ))}
@@ -564,7 +555,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
+                <h2 className="text-xl font-semibold">Delete Job</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -575,7 +566,7 @@ const Vehicles = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This action cannot be undone.
+                  Are you sure you want to delete this job listing? This action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -604,7 +595,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Job Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -618,7 +609,7 @@ const Vehicles = () => {
                 {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Images
+                    Job Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
@@ -664,7 +655,7 @@ const Vehicles = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your vehicle (max 10 images)
+                    Upload high-quality images (max 10 images)
                   </p>
                 </div>
 
@@ -700,14 +691,6 @@ const Vehicles = () => {
                           required={field.required}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                           rows={3}
-                        />
-                      ) : field.type === "checkbox" ? (
-                        <input
-                          type="checkbox"
-                          name={field.name}
-                          checked={formData[field.name] || false}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                       ) : (
                         <input
@@ -835,4 +818,4 @@ const DetailItem = ({ label, value }) => {
   );
 };
 
-export default Vehicles;
+export default Jobs;

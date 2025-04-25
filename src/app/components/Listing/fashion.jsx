@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
+import { getData, postData, updateData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
-const Vehicles = () => {
+const Fashion = () => {
   // State management
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -14,6 +14,7 @@ const Vehicles = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
   const [imagePreviews, setImagePreviews] = useState([]);
   const [pagination, setPagination] = useState({
@@ -54,7 +55,7 @@ const Vehicles = () => {
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/vehicles?page=${page}`);
+      const response = await getData(`/listing/paginate/fashion?page=${page}`);
       
       if (response?.data) {
         setData(
@@ -148,15 +149,13 @@ const Vehicles = () => {
     setFormData({
       ...originalData,
       negotiable: originalData?.negotiable || "NO",
-      condition: originalData?.condition || "USED",
-      category: originalData?.category || "Vehicles",
-      subcategory: originalData?.subcategory || "Cars",
-      make: originalData?.make || "",
-      model: originalData?.model || "",
-      year: originalData?.year || "",
-      color: originalData?.color || "",
-      listing_coordinates: JSON.stringify(coordinates),
-      location: address
+      condition: originalData?.condition || "NEW",
+      subcategory: originalData?.subcategory || "Jewelry",
+      category: originalData?.category || "Fashion",
+      donation: originalData?.donation || "NO",
+      from_business: originalData?.from_business || "false",
+      location: address,
+      listing_coordinates: JSON.stringify(coordinates)
     });
     
     // Handle image previews
@@ -315,18 +314,20 @@ const Vehicles = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Vehicles');
-      form.append("subcategory", formData.subcategory || 'Cars');
+      form.append("category", formData.category || 'Fashion');
+      form.append("subcategory", formData.subcategory || 'Jewelry');
       form.append("title", formData.title || '');
       form.append("description", formData.description || '');
       form.append("location", formData.location || '');
-      form.append("make", formData.make || '');
-      form.append("model", formData.model || '');
-      form.append("year", formData.year || '');
+      form.append("material_type", formData.material_type || '');
       form.append("color", formData.color || '');
+      form.append("condition", formData.condition || 'NEW');
       form.append("price", String(formData.price || 0));
       form.append("negotiable", formData.negotiable || 'NO');
-      form.append("condition", formData.condition || 'USED');
+      form.append("donation", formData.donation || 'NO');
+      form.append("size", formData.size || '');
+      form.append("brand", formData.brand || '');
+      form.append("from_business", formData.from_business || 'false');
       form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
       
       // Handle keywords
@@ -345,8 +346,8 @@ const Vehicles = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/vehicles/${listingId}`,
+      await updateData(
+        `/admin-panel/fashion/${listingId}`,
         form,
         {
           headers: {
@@ -355,12 +356,12 @@ const Vehicles = () => {
         }
       );
       
-      toast.success("Listing updated successfully!");
+      toast.success("Fashion listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      let errorMsg = "Failed to update listing";
+      let errorMsg = "Failed to update fashion listing";
       
       if (error.response) {
         if (error.response.status === 404) {
@@ -383,18 +384,21 @@ const Vehicles = () => {
     if (!listingData) return;
     
     try {
+      setIsDeleting(true);
       const form = new FormData();
       form.append('listing_id', listingData.id || '');
-      form.append('category', 'Vehicles');
+      form.append('category', 'Fashion');
 
       await deleteData("/admin-panel/delete", form);
 
       await fetchData(pagination.currentPage);
-      toast.success("Listing deleted successfully!");
+      toast.success("Fashion listing deleted successfully!");
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error(error.response?.data?.message || "Failed to delete listing");
+      toast.error(error.response?.data?.message || "Failed to delete fashion listing");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -402,10 +406,6 @@ const Vehicles = () => {
   const formFields = [
     { name: 'title', label: 'Title', type: 'text', required: true },
     { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'make', label: 'Make', type: 'text', required: true },
-    { name: 'model', label: 'Model', type: 'text', required: true },
-    { name: 'year', label: 'Year', type: 'number', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
     { name: 'price', label: 'Price', type: 'number', required: true },
     { 
       name: 'negotiable', 
@@ -421,9 +421,32 @@ const Vehicles = () => {
       options: ['NEW', 'USED', 'REFURBISHED'],
       required: true 
     },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
-    { name: 'category', label: 'Category', type: 'text', required: true },
-    { name: 'subcategory', label: 'Subcategory', type: 'text', required: true }
+    { name: 'color', label: 'Color', type: 'text', required: true },
+    { name: 'material_type', label: 'Material Type', type: 'text', required: true },
+    { name: 'size', label: 'Size', type: 'text', required: true },
+    { name: 'brand', label: 'Brand', type: 'text', required: true },
+    { 
+      name: 'subcategory', 
+      label: 'Subcategory', 
+      type: 'select',
+      options: ['Jewelry', 'Clothing', 'Accessories', 'Footwear', 'Watches'],
+      required: true 
+    },
+    { 
+      name: 'donation', 
+      label: 'Donation', 
+      type: 'select', 
+      options: ['YES', 'NO'],
+      required: true 
+    },
+    { 
+      name: 'from_business', 
+      label: 'From Business', 
+      type: 'select', 
+      options: ['true', 'false'],
+      required: true 
+    },
+    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false }
   ];
 
   if (loading) {
@@ -438,27 +461,9 @@ const Vehicles = () => {
     <>
       <div className="space-y-4">
         {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
+      
 
-        {/* Vehicle Listings */}
+        {/* Fashion Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
@@ -483,7 +488,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Vehicle Details</h2>
+                <h2 className="text-xl font-semibold">Fashion Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -505,26 +510,35 @@ const Vehicles = () => {
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.make && (
-                      <DetailItem label="Make" value={selectedCard.make} />
-                    )}
-                    {selectedCard?.model && (
-                      <DetailItem label="Model" value={selectedCard.model} />
-                    )}
-                    {selectedCard?.year && (
-                      <DetailItem label="Year" value={selectedCard.year} />
+                    {selectedCard?.material_type && (
+                      <DetailItem label="Material Type" value={selectedCard.material_type} />
                     )}
                     {selectedCard?.color && (
                       <DetailItem label="Color" value={selectedCard.color} />
                     )}
+                    {selectedCard?.size && (
+                      <DetailItem label="Size" value={selectedCard.size} />
+                    )}
+                    {selectedCard?.brand && (
+                      <DetailItem label="Brand" value={selectedCard.brand} />
+                    )}
                     {selectedCard?.condition && (
                       <DetailItem label="Condition" value={selectedCard.condition} />
+                    )}
+                    {selectedCard?.negotiable && (
+                      <DetailItem label="Negotiable" value={selectedCard.negotiable} />
+                    )}
+                    {selectedCard?.donation && (
+                      <DetailItem label="Donation" value={selectedCard.donation} />
                     )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
                     )}
-                    {selectedCard?.negotiable && (
-                      <DetailItem label="Negotiable" value={selectedCard.negotiable} />
+                    {selectedCard?.subcategory && (
+                      <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                    )}
+                    {selectedCard?.from_business && (
+                      <DetailItem label="From Business" value={selectedCard.from_business} />
                     )}
                     {selectedCard?.listing_coordinates && (
                       <DetailItem
@@ -547,7 +561,7 @@ const Vehicles = () => {
                         <img
                           key={index}
                           src={img}
-                          alt={`Vehicle ${index}`}
+                          alt={`Fashion ${index}`}
                           className="w-32 h-32 object-cover rounded-md border"
                         />
                       ))}
@@ -564,7 +578,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
+                <h2 className="text-xl font-semibold">Delete Fashion Item</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -575,23 +589,49 @@ const Vehicles = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This action cannot be undone.
+                  Are you sure you want to delete this fashion listing? This action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={handleCloseDeleteModal}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    disabled={isDeleting}
+                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleDeleteListing}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    disabled={isDeleting}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                   >
-                    Delete
+                    {isDeleting ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Deleting...
+                      </>
+                    ) : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -604,7 +644,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Fashion Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -618,7 +658,7 @@ const Vehicles = () => {
                 {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Images
+                    Product Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
@@ -664,7 +704,7 @@ const Vehicles = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your vehicle (max 10 images)
+                    Upload high-quality images of your product (max 10 images)
                   </p>
                 </div>
 
@@ -700,14 +740,6 @@ const Vehicles = () => {
                           required={field.required}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                           rows={3}
-                        />
-                      ) : field.type === "checkbox" ? (
-                        <input
-                          type="checkbox"
-                          name={field.name}
-                          checked={formData[field.name] || false}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                       ) : (
                         <input
@@ -805,6 +837,25 @@ const Vehicles = () => {
             </div>
           </div>
         )}
+          <div className="flex justify-between items-end">
+          <button
+            onClick={() => fetchData(pagination.currentPage - 1)}
+            disabled={!pagination.hasPrev || loading}
+            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700">
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => fetchData(pagination.currentPage + 1)}
+            disabled={!pagination.hasNext || loading}
+            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       <ToastContainer
@@ -835,4 +886,4 @@ const DetailItem = ({ label, value }) => {
   );
 };
 
-export default Vehicles;
+export default Fashion;

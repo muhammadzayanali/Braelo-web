@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import BackButton from "@/app/components/BackButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { postData } from "@/app/API/method";
+import { postBusiData } from "@/app/API/method";
 
 // Categories and subcategories
 const categories = [
@@ -19,7 +19,7 @@ const categories = [
     label: "Restaurants",
     subcategories: ["Fast Food", "Fine Dining", "Cafe"],
   },
-  // Add more categories as needed
+
 ];
 
 const AddNewBusiness = () => {
@@ -45,7 +45,7 @@ const AddNewBusiness = () => {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCs_jvLKHzv8poFZmtTO15y1csL746lJw4&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDy-uoC7NTV52ghbZu7bDQT6M227FigwjI&libraries=places`;
     script.async = true;
     script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);
@@ -200,7 +200,7 @@ const AddNewBusiness = () => {
         );
 
         // Make API call using postData
-        const response = await postData("/auth/business", formData, {
+        const response = await postBusiData("/auth/business", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",

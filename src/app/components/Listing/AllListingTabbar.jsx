@@ -5,7 +5,16 @@ import { Navigation } from "swiper/modules"; // Import the Navigation module
 import "swiper/css";
 import "swiper/css/navigation"; // Import the CSS for navigation
 import Vehicles from "./Vehicles";
-;
+import RealState from "./RealState";
+import Events from "./events";
+import Job from "./job";
+import Electronics from "./electronics";
+import Furniture from "./furniture";
+import Kids from "./kids";
+import Fashion from "./fashion";
+import Sports from "./sport&hobby";
+
+
 
 const AllListingTabbar = () => {
   const [activeButton, setActiveButton] = useState(1);
@@ -24,17 +33,17 @@ const AllListingTabbar = () => {
   const buttons = [
     "Vehicles",
     "Real Estate",
-    "Services",
+    // "Services",
     "Events",
     "Jobs",
     "Electronics",
     "Furniture",
-    "Fashion",
     "Kids",
+    "Fashion",
     "Sports & Hobby",
-    "Outing",
-    "Places",
-    "Tours",
+    // "Outing",
+    // "Places",
+    // "Tours",
   ];
 
   return (
@@ -61,10 +70,14 @@ const AllListingTabbar = () => {
       </Swiper>
       <div className="mt-4">
         {activeButton === 1 && <Vehicles/>}
-        {activeButton === 2 && ""}
-        {activeButton === 3 && ""}
-        {activeButton === 4 && ""}
-        {activeButton === 5 && ""}
+        {activeButton === 2 && <RealState/>}
+        {activeButton === 3 && <Events/>}
+        {activeButton === 4 && <Job/>}
+        {activeButton === 5 && <Electronics/>}
+        {activeButton === 6 && <Furniture/>}
+        {activeButton === 7 && <Kids/>}
+        {activeButton === 8 && <Fashion/>}
+        {activeButton === 9 && <Sports/>}
       </div>
     </>
   );

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// import { useNavigate } from "react-router-dom";
 import { getData, postData, updateListData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
-const Vehicles = () => {
+const Events = () => {
   // State management
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -24,6 +25,8 @@ const Vehicles = () => {
   });
   const [autocomplete, setAutocomplete] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [address, setAddress] = useState("");
+  // const navigate = useNavigate();
 
   // Load Google Maps script
   useEffect(() => {
@@ -54,7 +57,7 @@ const Vehicles = () => {
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/vehicles?page=${page}`);
+      const response = await getData(`/listing/paginate/events?page=${page}`);
       
       if (response?.data) {
         setData(
@@ -69,7 +72,7 @@ const Vehicles = () => {
                 ? new Date(item.created_at).toLocaleDateString()
                 : ""
             }`,
-            price: item.price ? `$${item.price}` : "$0",
+            price: item.ticket_price ? `$${item.ticket_price}` : "$0",
             status: item.is_active ? "active" : "inactive",
             originalData: item,
           }))
@@ -148,13 +151,15 @@ const Vehicles = () => {
     setFormData({
       ...originalData,
       negotiable: originalData?.negotiable || "NO",
-      condition: originalData?.condition || "USED",
-      category: originalData?.category || "Vehicles",
-      subcategory: originalData?.subcategory || "Cars",
-      make: originalData?.make || "",
-      model: originalData?.model || "",
-      year: originalData?.year || "",
-      color: originalData?.color || "",
+      category: originalData?.category || "Events",
+      subcategory: originalData?.subcategory || "",
+      event_type: originalData?.event_type || "",
+      event_date: originalData?.event_date || "",
+      expected_audience: originalData?.expected_audience || "",
+      special_feature: originalData?.special_feature || "",
+      ticket_price: originalData?.ticket_price || 0,
+      industry_focus: originalData?.industry_focus || "",
+      from_business: originalData?.from_business || false,
       listing_coordinates: JSON.stringify(coordinates),
       location: address
     });
@@ -315,18 +320,19 @@ const Vehicles = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Vehicles');
-      form.append("subcategory", formData.subcategory || 'Cars');
+      form.append("category", formData.category || 'Events');
+      form.append("subcategory", formData.subcategory || '');
       form.append("title", formData.title || '');
       form.append("description", formData.description || '');
       form.append("location", formData.location || '');
-      form.append("make", formData.make || '');
-      form.append("model", formData.model || '');
-      form.append("year", formData.year || '');
-      form.append("color", formData.color || '');
-      form.append("price", String(formData.price || 0));
+      form.append("event_type", formData.event_type || '');
+      form.append("event_date", formData.event_date || '');
+      form.append("expected_audience", String(formData.expected_audience || 0));
+      form.append("special_feature", formData.special_feature || '');
+      form.append("ticket_price", String(formData.ticket_price || 0));
       form.append("negotiable", formData.negotiable || 'NO');
-      form.append("condition", formData.condition || 'USED');
+      form.append("industry_focus", String(formData.industry_focus || ''));
+      form.append("from_business", formData.from_business ? 'true' : 'false');
       form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
       
       // Handle keywords
@@ -346,7 +352,7 @@ const Vehicles = () => {
       });
 
       await updateListData(
-        `/admin-panel/vehicles/${listingId}`,
+        `/admin-panel/events/${listingId}`,
         form,
         {
           headers: {
@@ -385,7 +391,7 @@ const Vehicles = () => {
     try {
       const form = new FormData();
       form.append('listing_id', listingData.id || '');
-      form.append('category', 'Vehicles');
+      form.append('category', 'Events');
 
       await deleteData("/admin-panel/delete", form);
 
@@ -402,11 +408,12 @@ const Vehicles = () => {
   const formFields = [
     { name: 'title', label: 'Title', type: 'text', required: true },
     { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'make', label: 'Make', type: 'text', required: true },
-    { name: 'model', label: 'Model', type: 'text', required: true },
-    { name: 'year', label: 'Year', type: 'number', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
-    { name: 'price', label: 'Price', type: 'number', required: true },
+    { name: 'location', label: 'Location', type: 'text', required: true },
+    { name: 'event_type', label: 'Event Type', type: 'text', required: true },
+    { name: 'event_date', label: 'Event Date', type: 'datetime-local', required: true },
+    { name: 'expected_audience', label: 'Expected Audience', type: 'number', required: true },
+    { name: 'special_feature', label: 'Special Feature', type: 'text', required: true },
+    { name: 'ticket_price', label: 'Ticket Price', type: 'number', required: true },
     { 
       name: 'negotiable', 
       label: 'Negotiable', 
@@ -414,14 +421,14 @@ const Vehicles = () => {
       options: ['YES', 'NO'],
       required: true 
     },
-    { 
-      name: 'condition', 
-      label: 'Condition', 
-      type: 'select', 
-      options: ['NEW', 'USED', 'REFURBISHED'],
-      required: true 
-    },
+    { name: 'industry_focus', label: 'Industry Focus', type: 'text', required: true },
     { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
+    { 
+      name: 'from_business', 
+      label: 'From Business', 
+      type: 'checkbox', 
+      required: false 
+    },
     { name: 'category', label: 'Category', type: 'text', required: true },
     { name: 'subcategory', label: 'Subcategory', type: 'text', required: true }
   ];
@@ -458,7 +465,7 @@ const Vehicles = () => {
           </button>
         </div>
 
-        {/* Vehicle Listings */}
+        {/* Event Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
@@ -483,7 +490,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Vehicle Details</h2>
+                <h2 className="text-xl font-semibold">Event Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -501,24 +508,24 @@ const Vehicles = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price ? selectedCard.price : "Price not set"}
+                    {selectedCard?.ticket_price ? `$${selectedCard.ticket_price}` : "Price not set"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.make && (
-                      <DetailItem label="Make" value={selectedCard.make} />
+                    {selectedCard?.event_type && (
+                      <DetailItem label="Event Type" value={selectedCard.event_type} />
                     )}
-                    {selectedCard?.model && (
-                      <DetailItem label="Model" value={selectedCard.model} />
+                    {selectedCard?.event_date && (
+                      <DetailItem 
+                        label="Event Date" 
+                        value={new Date(selectedCard.event_date).toLocaleString()} 
+                      />
                     )}
-                    {selectedCard?.year && (
-                      <DetailItem label="Year" value={selectedCard.year} />
+                    {selectedCard?.expected_audience && (
+                      <DetailItem label="Expected Audience" value={selectedCard.expected_audience} />
                     )}
-                    {selectedCard?.color && (
-                      <DetailItem label="Color" value={selectedCard.color} />
-                    )}
-                    {selectedCard?.condition && (
-                      <DetailItem label="Condition" value={selectedCard.condition} />
+                    {selectedCard?.special_feature && (
+                      <DetailItem label="Special Feature" value={selectedCard.special_feature} />
                     )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
@@ -547,7 +554,7 @@ const Vehicles = () => {
                         <img
                           key={index}
                           src={img}
-                          alt={`Vehicle ${index}`}
+                          alt={`Event ${index}`}
                           className="w-32 h-32 object-cover rounded-md border"
                         />
                       ))}
@@ -564,7 +571,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
+                <h2 className="text-xl font-semibold">Delete Event</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -575,7 +582,7 @@ const Vehicles = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This action cannot be undone.
+                  Are you sure you want to delete this event listing? This action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -604,7 +611,7 @@ const Vehicles = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Event Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -618,7 +625,7 @@ const Vehicles = () => {
                 {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Images
+                    Event Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
@@ -664,7 +671,7 @@ const Vehicles = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your vehicle (max 10 images)
+                    Upload high-quality images of your event (max 10 images)
                   </p>
                 </div>
 
@@ -835,4 +842,4 @@ const DetailItem = ({ label, value }) => {
   );
 };
 
-export default Vehicles;
+export default Events;
