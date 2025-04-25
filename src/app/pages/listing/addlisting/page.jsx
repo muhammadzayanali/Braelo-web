@@ -5,15 +5,15 @@ import BackButton from "@/app/components/BackButton";
 
 const categories = [
   { name: "Vehicles", slug: "Vehicles", endpoint: "vehicle" },
-  { name: "Real Estate", slug: "Real Estate", endpoint: "realestate" },
+  { name: "Real Estate", slug: "realestate", endpoint: "realestate" },
   // { name: "Services", slug: "services", endpoint: "services" },
-  { name: "Events", slug: "Events", endpoint: "events" },
-  { name: "Jobs", slug: "Jobs", endpoint: "jobs" },
-  { name: "Electronics", slug: "Electronics", endpoint: "electronics" },
-  { name: "Furniture", slug: "Furniture", endpoint: "furniture" },
-  { name: "Fashion", slug: "Fashion", endpoint: "fashion" },
-  { name: "Kids", slug: "Kids", endpoint: "kids" },
-  { name: "Sports & Hobby", slug: "Sports & Hobby", endpoint: "sportshobby" },
+  { name: "Events", slug: "events", endpoint: "events" },
+  { name: "Jobs", slug: "jobs", endpoint: "jobs" },
+  { name: "Electronics", slug: "electronics", endpoint: "electronics" },
+  { name: "Furniture", slug: "furniture", endpoint: "furniture" },
+  { name: "Fashion", slug: "fashion", endpoint: "fashion" },
+  { name: "Kids", slug: "kids", endpoint: "kids" },
+  { name: "Sports & Hobby", slug: "sportsandhobby", endpoint: "sportshobby" },
 ];
 
 const Categories = () => {
