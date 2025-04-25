@@ -111,25 +111,34 @@ export default function ReportsTable() {
     },
   ];
 
-  useEffect(async () =>  {
-    const data = await getData("/admin-panel/report/action");
-    console.log("API Response:", data);
-    setReports(data.data.results || []);
-    if (data?.data?.results) {
-      const formattedReports = data.data.results.map((report, index) => ({
-        id: report.id || index + 1,
-        ReportedTo: report.reported_to_user || "No Title",
-        ReportedBy: report.reported_by_user || "No Message",
-        description: report.issue_description || "No Description",
-        status: report.status || "Pending",
-        Reason: report.Reason || "No Reason",
-        DateCreated: report.DateCreated || new Date().toISOString(),
-      }));
-      setReports(formattedReports);
-    }
-    else {
-      throw new Error("Invalid reports data structure");
-    }
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const data = await getData("/admin-panel/report/action");
+        console.log("API Response:", data);
+        
+        if (data?.data?.results) {
+          const formattedReports = data.data.results.map((report, index) => ({
+            id: report.id || index + 1,
+            ReportedTo: report.reported_to_user || "No Title",
+            ReportedBy: report.reported_by_user || "No Message",
+            description: report.issue_description || "No Description",
+            status: report.status || "Pending",
+            Reason: report.Reason || "No Reason",
+            DateCreated: report.DateCreated || new Date().toISOString(),
+          }));
+          setReports(formattedReports);
+        } else {
+          throw new Error("Invalid reports data structure");
+        }
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+        // Fallback to sample data if API fails
+        setReports(sampleData);
+      }
+    };
+  
+    fetchReports();
   }, []);
 
   const actionBodyTemplate = (rowData) => {
