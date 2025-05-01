@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { LoginApi } from "@/app/API/method";
 
 function Login() {
@@ -13,82 +15,111 @@ function Login() {
   const handleClick = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await LoginApi("/admin-panel/login", {
         email,
         password,
       });
 
-      console.log("Full response:", response); // For debugging
-      
-      // Check if response exists and has data
+      console.log("Full response:", response);
+
       if (!response || !response.data) {
         throw new Error("Invalid response from server");
       }
 
-      // Handle different possible response structures
       const token = response.data?.token?.access || 
-                   response.data?.access_token || 
-                   response.data?.data?.token?.access;
+                    response.data?.access_token || 
+                    response.data?.data?.token?.access;
 
       if (!token) {
         throw new Error("Token not found in response");
       }
+
       localStorage.setItem("token", token);
+      toast.success("Login successful!");
       router.push("/pages/dashboard");
-      
+
     } catch (error) {
       console.error("Login failed:", error);
-      alert(error.message || "Login failed. Please check your credentials.");
+      toast.error(error.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-12">
-      {/* Left Section */}
-      <div className="col-span-6 flex items-center justify-center">
-        <div className="space-y-8">
-          <h1 className="text-[25px] font-bold text-[#232F30] font-plus">
-            Braelo Power Admin
-          </h1>
-          <form onSubmit={handleClick}>
-            <div className="flex flex-col space-y-6">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-[300px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-[300px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-[300px] bg-black text-white text-[17px] font-normal px-6 py-3 rounded-md font-plus ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                {isLoading ? "Logging in..." : "Login"}
-              </button>
-            </div>
-          </form>
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <div className="min-h-screen grid grid-cols-12">
+        {/* Left Section */}
+        <div className="col-span-6 flex items-center justify-center">
+          <div className="space-y-8">
+            <h1 className="text-[25px] font-bold text-[#232F30] font-plus">
+              Braelo Power Admin
+            </h1>
+            <form onSubmit={handleClick}>
+              <div className="flex flex-col space-y-6">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="w-[300px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  className="w-[300px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-[300px] flex items-center justify-center bg-black text-white text-[17px] font-normal px-6 py-3 rounded-md font-plus ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                        ></path>
+                      </svg>
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      {/* Right Section */}
-      <ImageSection />
-    </div>
+        {/* Right Section */}
+        <ImageSection />
+      </div>
+    </>
   );
 }
 

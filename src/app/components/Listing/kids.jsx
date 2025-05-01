@@ -3,7 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ListingCard from "./LisitngCard";
 import CardToggle from "./CardToggle";
-import { getData, postData, updateData, deleteData } from "@/app/API/method";
+import { getData, postData, updateListData, deleteData } from "@/app/API/method";
 
 const Kids = () => {
   // State management
@@ -341,14 +341,9 @@ const Kids = () => {
         }
       });
 
-      await updateData(
+      await updateListData(
         `/admin-panel/kids/${listingId}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
+        form
       );
       
       toast.success("Listing updated successfully!");

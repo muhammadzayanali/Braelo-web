@@ -101,3 +101,21 @@ export const postBusiData = async (endpoint, data) => {
     throw error;
   }
 };
+
+export const getBanData = async (endpoint) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+    return {
+      data: response.data.data.results,
+      status: response.status,
+      error: null
+    };
+  } catch (error) {
+    console.error('GET Error:', error);
+    return {
+      data: null,
+      status: error.response?.status || 500,
+      error: error.response?.data?.message || error.message
+    };
+  }
+};

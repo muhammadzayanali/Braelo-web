@@ -15,7 +15,7 @@ const Userdetail = () => {
   // const searchParams = useSearchParams();
   // const router = useRouter();
   // const userId = searchParams.get('id');
-  
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,14 +23,14 @@ const Userdetail = () => {
   const [OpenEditModal, setEditModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
- useEffect(() => {
-     const storedData = sessionStorage.getItem('currentUserData');
-     if (storedData) {
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("currentUserData");
+    if (storedData) {
       setUserData(JSON.parse(storedData));
-     }
-   }, []);
+    }
+  }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     const handleDataUpdate = () => {
       const updatedData = sessionStorage.getItem("currentUserData");
       setUserData(JSON.parse(updatedData));
@@ -72,7 +72,7 @@ const Userdetail = () => {
           <BackButton buttonStyle="bg-gray-300" iconStyle="text-gray-700" />
           <div className="text-red-500">
             Error: {error.message}
-            <button 
+            <button
               onClick={() => router.back()}
               className="ml-4 px-4 py-2 bg-blue-500 text-white rounded"
             >
@@ -255,7 +255,9 @@ const Userdetail = () => {
             <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
               Deleted At:
               <span className="font-[400] text-[#a0a8b1] ml-1 mt-3 ">
-                {userData.deleted_at ? new Date(userData.deleted_at).toLocaleString() : "N/A"}
+                {userData.deleted_at
+                  ? new Date(userData.deleted_at).toLocaleString()
+                  : "N/A"}
               </span>
             </h1>
             <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
@@ -267,12 +269,44 @@ const Userdetail = () => {
             <h1 className="text-[16px] font-[700] font-plus text-[#75818D] mt-3">
               Role:
               <span className="font-[400] text-[#a0a8b1] ml-1">
-                {userData.role === "admin" ? "Admin" : "User"}
+                {userData.is_superuser === true ? "Admin" : "Client"}
               </span>
             </h1>
           </div>
         </div>
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
+              Start Chat with Business
+            </h2>
+            <p className="mb-4">
+              Click below to send an email to:{" "}
+              <strong>{userData.email}</strong>
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <a
+                href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(
+                  userData.email
+                )}&su=Hello&body=Hi%20there!%20I%20wanted%20to%20connect%20with%20you.`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="px-4 py-2 bg-[#CD9403] text-white rounded hover:bg-[#b37f02]">
+                  Open in Gmail
+                </button>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <ListingTabbar userId={userData.id} />

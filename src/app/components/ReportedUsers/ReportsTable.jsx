@@ -192,13 +192,13 @@ export default function ReportsTable() {
       <DataTable
         value={reports}
         paginator
-        first={first} // Controlled pagination
+        first={first}
         rows={rows}
         onPage={onPage}
         scrollHeight="400px"
-        rowsPerPageOptions={[5, 10, 20]}
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-        currentPageReportTemplate="Showing 1 to 10 of 50 entries"
+       // rowsPerPageOptions={[5, 10, 20]}
+        // paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        // currentPageReportTemplate="Showing 1 to 10 of 50 entries"
         tableStyle={{ minWidth: "100rem" }}
         className="custom-paginator"
       >

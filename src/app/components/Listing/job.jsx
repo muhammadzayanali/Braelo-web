@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 // import { useRouter } from "next/router";
-import { getData, postData, updateData, deleteData } from "@/app/API/method";
+import { getData, postData, updateListData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
@@ -70,7 +70,7 @@ const Jobs = () => {
                 ? new Date(item.created_at).toLocaleDateString()
                 : ""
             }`,
-            price: item.price ? `$${item.price}` : "$0",
+            salary: item.salary_range,
             status: item.is_active ? "active" : "inactive",
             originalData: item,
           }))
@@ -154,6 +154,7 @@ const Jobs = () => {
       category: originalData?.category || "Jobs",
       subcategory: originalData?.subcategory || "Home Office",
       location: address,
+      salary: originalData?.salary_range || "",
       listing_coordinates: JSON.stringify(coordinates)
     });
     
@@ -316,6 +317,7 @@ const Jobs = () => {
       form.append("category", formData.category || 'Jobs');
       form.append("subcategory", formData.subcategory || 'Home Office');
       form.append("title", formData.title || '');
+      form.append("job title", formData.job_tittle || '');
       form.append("description", formData.description || '');
       form.append("location", formData.location || '');
       form.append("job_type", formData.job_type || 'FULL_TIME');
@@ -341,14 +343,9 @@ const Jobs = () => {
         }
       });
 
-      await updateData(
+      await updateListData(
         `/admin-panel/jobs/${listingId}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
+        form
       );
       
       toast.success("Job listing updated successfully!");
@@ -396,28 +393,32 @@ const Jobs = () => {
 
   // Form fields configuration
   const formFields = [
-    { name: 'title', label: 'Job Title', type: 'text', required: true },
-    { name: 'description', label: 'Job Description', type: 'textarea', required: true },
-    { name: 'company', label: 'Company', type: 'text', required: true },
-    { name: 'experience_level', label: 'Experience Level', type: 'text', required: true },
-    { name: 'price', label: 'Salary', type: 'number', required: true },
-    { 
-      name: 'negotiable', 
-      label: 'Negotiable', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
-    },
-    { 
-      name: 'job_type', 
-      label: 'Job Type', 
-      type: 'select', 
-      options: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMPORARY', 'INTERNSHIP', 'VOLUNTEER'],
-      required: true 
-    },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false },
-    { name: 'category', label: 'Category', type: 'text', required: true },
-    { name: 'subcategory', label: 'Subcategory', type: 'text', required: true }
+    { name: "title", label: "Title", type: "text", required: true },
+      { name: "description", label: "Job Description", type: "textarea", required: true },
+      { name: "company", label: "Company", type: "text", required: true },
+      { name: "experience_level", label: "Experience Level", type: "text", required: true },
+      { name: "job_tittle", label: "Job title", type: "text", required: true },
+      { name: "required_skills", label: "Required Skills", type: "text", required: true },
+      { name: "employment_type", label: "Employment Type ", type: "text", required: true },
+      { name: "salary_range", label: "Salary", type: "text", required: true },
+      { name: "working_hours", label: "working hours", type: "number", required: true },
+      { 
+        name: "negotiable", 
+        label: "Negotiable", 
+        type: "select", 
+        options: ["YES", "NO"],
+        required: true 
+      },
+      { 
+        name: "job_type", 
+        label: "Job Type", 
+        type: "select", 
+        options: ["FULL_TIME", "PART_TIME", "CONTRACT", "TEMPORARY", "INTERNSHIP", "VOLUNTEER"],
+        required: true 
+      },
+      { name: "keywords", label: "Keywords (comma separated)", type: "text", required: false },
+      { name: "category", label: "Category", type: "text", required: true },
+      { name: "subcategory", label: "Subcategory", type: "text", required: true }
   ];
 
   if (loading) {
@@ -459,7 +460,7 @@ const Jobs = () => {
               key={index}
               image={card.image}
               icons={card.icons}
-              price={card.price}
+              price={card.salary}
               title={card.title}
               description={card.description}
               toggle={<CardToggle status={card.status === "active"} />}
@@ -495,7 +496,7 @@ const Jobs = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price ? selectedCard.price : "Salary not set"}
+                    {selectedCard?.salary ? selectedCard.salary : "Salary not set"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

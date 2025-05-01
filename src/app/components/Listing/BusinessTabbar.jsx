@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import TotalListing from "./TotalListing";
-import ActiveListing from "./ActiveLsiting";
-import InactiveListing from "./InactiveListing";
-import DeletedListing from "./DeletedLsiting";
-import SaveListing from "./SaveLsiting";
+import TotalBusiListing from "./TotalListing";
+import ActiveBusiListing from "./ActiveLsiting";
+import InactiveBusiListing from "./InactiveListing";
+// import DeletedListing from "./DeletedLsiting";
+// import SaveListing from "./SaveLsiting";
 
-const ListingTabbar = ({userId}) => {
+const BusinessTabbar = ({businessId}) => {
   const [activeButton, setActiveButton] = useState(1);
 
   const handleClick = (buttonIndex) => {
@@ -35,19 +35,19 @@ const ListingTabbar = ({userId}) => {
         {/* <button className={buttonClasses(4)} onClick={() => handleClick(4)}>
           Deleted Listings
         </button> */}
-        <button className={buttonClasses(5)} onClick={() => handleClick(5)}>
+        {/* <button className={buttonClasses(5)} onClick={() => handleClick(5)}>
           Saved Listings
-        </button>
+        </button> */}
       </div>
       <div className="mt-4">
-        {activeButton === 1 && <TotalListing user_id={userId} />}
-        {activeButton === 2 && <ActiveListing user_id={userId} />}
-        {activeButton === 3 && <InactiveListing user_id={userId} />}
-        {/* {activeButton === 4 && <DeletedListing user_id={userId} />} */}
-        {activeButton === 5 && <SaveListing user_id={userId} />}
+        {activeButton === 1 && <TotalBusiListing user_id={businessId} />}
+        {activeButton === 2 && <ActiveBusiListing user_id={businessId} />}
+        {activeButton === 3 && <InactiveBusiListing user_id={businessId} />}
+        {/* {activeButton === 4 && <DeletedListing user_id={userId} />}
+        {activeButton === 5 && <SaveListing user_id={userId} />} */}
       </div>
     </>
   );
 };
 
-export default ListingTabbar;
+export default BusinessTabbar;

@@ -26,7 +26,6 @@ const RealEstate = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
-    fetchData();
     // Load Google Maps script
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
@@ -38,6 +37,17 @@ const RealEstate = () => {
     } else {
       setMapLoaded(true);
     }
+
+    fetchData();
+
+    return () => {
+      // Clean up image preview URLs
+      imagePreviews.forEach((preview) => {
+        if (preview.isNew) {
+          URL.revokeObjectURL(preview.preview);
+        }
+      });
+    };
   }, []);
 
   const fetchData = async (page = 1) => {
@@ -75,26 +85,62 @@ const RealEstate = () => {
       console.error("Error fetching data:", error);
       toast.error(error.response?.data?.message || "Failed to load listings");
       if (error.response?.status === 401) {
-        console.log("Redirecting to login page...");
+        localStorage.removeItem("token");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditClick = (card) => {
+  const reverseGeocode = async (coordinates) => {
+    if (!mapLoaded || !window.google) return;
+
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: coordinates[1],
+        lng: coordinates[0],
+      };
+
+      return new Promise((resolve) => {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+          if (status === "OK" && results[0]) {
+            resolve(results[0].formatted_address);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error in reverse geocoding:", error);
+      return null;
+    }
+  };
+
+  const handleEditClick = async (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
+
+    // Parse coordinates
     let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
-    
     try {
       if (originalData.listing_coordinates) {
-        coordinates = typeof originalData.listing_coordinates === 'string' 
-          ? JSON.parse(originalData.listing_coordinates) 
-          : originalData.listing_coordinates;
+        coordinates =
+          typeof originalData.listing_coordinates === "string"
+            ? JSON.parse(originalData.listing_coordinates)
+            : originalData.listing_coordinates;
       }
     } catch (e) {
       console.error("Error parsing coordinates:", e);
+    }
+
+    // Get address from coordinates
+    let address = originalData.location || "";
+    if (coordinates.coordinates && coordinates.coordinates.length === 2) {
+      const geocodedAddress = await reverseGeocode(coordinates.coordinates);
+      if (geocodedAddress) {
+        address = geocodedAddress;
+      }
     }
 
     setFormData({
@@ -107,10 +153,11 @@ const RealEstate = () => {
       lease_terms: originalData?.lease_terms || "LONG-TERM",
       land_type: originalData?.land_type || "Rural",
       from_business: originalData?.from_business || "false",
-      location: originalData?.location || "",
       listing_coordinates: JSON.stringify(coordinates),
+      location: address,
     });
 
+    // Handle image previews
     if (originalData.pictures && originalData.pictures.length > 0) {
       setImagePreviews(
         originalData.pictures.map((pic) => ({
@@ -124,35 +171,39 @@ const RealEstate = () => {
 
     setIsEditModalOpen(true);
 
+    // Initialize Google Maps autocomplete after a slight delay
     setTimeout(() => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
         if (input) {
-          const autocomplete = new window.google.maps.places.Autocomplete(input, {
-            types: ["geocode"],
-          });
+          const autocomplete = new window.google.maps.places.Autocomplete(
+            input,
+            {
+              types: ["geocode"],
+            }
+          );
           setAutocomplete(autocomplete);
-          
+
           autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
             if (!place.geometry) {
               toast.warning("No details available for this location");
               return;
             }
-            
+
             const location = place.formatted_address;
             const coordinates = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            
-            setFormData(prev => ({
+
+            setFormData((prev) => ({
               ...prev,
               location,
               listing_coordinates: JSON.stringify({
                 type: "Point",
-                coordinates: [coordinates.lng, coordinates.lat]
-              })
+                coordinates: [coordinates.lng, coordinates.lat],
+              }),
             }));
           });
         }
@@ -189,15 +240,45 @@ const RealEstate = () => {
   };
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const isValidImage = (file) => {
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+
+    if (!validTypes.includes(file.type)) {
+      toast.error(`Invalid file type: ${file.type}`);
+      return false;
+    }
+
+    if (file.size > MAX_SIZE) {
+      toast.error(
+        `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`
+      );
+      return false;
+    }
+
+    return true;
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+    const MAX_IMAGES = 10;
 
-    if (files.length > 0) {
-      const newImagePreviews = files.map((file) => ({
+    if (files.length + imagePreviews.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    const validFiles = files.filter((file) => isValidImage(file));
+
+    if (validFiles.length > 0) {
+      const newImagePreviews = validFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
         isNew: true,
@@ -233,7 +314,7 @@ const RealEstate = () => {
 
       const form = new FormData();
 
-      // Append all fields to form
+      // Append all form data
       form.append("category", formData.category || "Real Estate");
       form.append("subcategory", formData.subcategory || "Commercial");
       form.append("title", formData.title || "");
@@ -250,24 +331,20 @@ const RealEstate = () => {
       form.append("bathrooms", String(formData.bathrooms || "1"));
       form.append("bedrooms", String(formData.bedrooms || "1"));
       form.append("from_business", formData.from_business || "false");
-      
-      // Use the coordinates from formData or default
       form.append(
         "listing_coordinates",
-        formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}'
+        formData.listing_coordinates ||
+          '{"type":"Point","coordinates":[31.4494997,74.284469]}'
       );
 
       // Handle keywords
       if (formData.keywords) {
-        const keywordsArray = Array.isArray(formData.keywords) 
-          ? formData.keywords 
-          : formData.keywords.split(',').map(kw => kw.trim());
-        
-        keywordsArray.forEach((kw, index) => {
-          form.append(`keywords[${index}]`, kw);
-        });
-      } else {
-        form.append("keywords[0]", "property");
+        form.append(
+          "keywords",
+          Array.isArray(formData.keywords)
+            ? formData.keywords.join(",")
+            : formData.keywords
+        );
       }
 
       // Handle images
@@ -275,27 +352,42 @@ const RealEstate = () => {
         if (img.isNew) {
           form.append(`pictures`, img.file);
         } else {
-          form.append(`pictures[${index}]`, img.url);
+          form.append(`existingPictures[${index}]`, img.url);
         }
       });
 
-      await updateListData(`/admin-panel/realestate/${listingId}`, form);
+      await updateListData(`/admin-panel/realestate/${listingId}`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast.success("Listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      toast.error(error.response?.data?.message || "Failed to update listing");
+      let errorMsg = "Failed to update listing";
+
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMsg = "Resource not found (404) - please check the endpoint";
+        } else if (error.response.data?.message) {
+          errorMsg = error.response.data.message;
+        } else if (error.response.data?.errors) {
+          errorMsg = Object.values(error.response.data.errors).join(", ");
+        }
+      }
+
+      toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDeleteListing = async () => {
-    if (!selectedCard) return;
-
-    const listingData = selectedCard.originalData || selectedCard;
+    const listingData = selectedCard?.originalData || selectedCard;
+    if (!listingData) return;
 
     try {
       const form = new FormData();
@@ -315,7 +407,14 @@ const RealEstate = () => {
 
   const formFields = [
     { name: "title", label: "Title", type: "text", required: true },
-    { name: "description", label: "Description", type: "text", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
+    },
+    { name: "property_type", label: "Property Type", type: "text", required: true },
+    { name: "size", label: "Size", type: "text", required: true },
     { name: "price", label: "Price", type: "number", required: true },
     {
       name: "negotiable",
@@ -331,8 +430,6 @@ const RealEstate = () => {
       options: ["NEW", "USED", "REFURBISHED"],
       required: true,
     },
-    { name: "property_type", label: "Property Type", type: "text", required: true },
-    { name: "size", label: "Size", type: "text", required: true },
     {
       name: "lease_terms",
       label: "Lease Terms",
@@ -353,43 +450,27 @@ const RealEstate = () => {
     { name: "subcategory", label: "Subcategory", type: "text", required: true },
     { name: "category", label: "Category", type: "text", required: true },
     { name: "from_business", label: "From Business", type: "text", required: true },
+    {
+      name: "keywords",
+      label: "Keywords (comma separated)",
+      type: "text",
+      required: false,
+    },
   ];
 
   if (loading) {
     return (
-      <>
-        <div className="grid grid-cols-4 gap-3">Loading...</div>
-        <ToastContainer />
-      </>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
     );
   }
 
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
-
         {/* Real Estate Listings */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
               key={index}
@@ -413,24 +494,12 @@ const RealEstate = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Listing Details</h2>
+                <h2 className="text-xl font-semibold">Real Estate Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  ×
                 </button>
               </div>
 
@@ -443,7 +512,7 @@ const RealEstate = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price}
+                    {selectedCard?.price ? selectedCard.price : "Price not set"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -478,12 +547,11 @@ const RealEstate = () => {
                       <DetailItem label="Negotiable" value={selectedCard.negotiable} />
                     )}
                     {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
-                          typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
+                      <CoordinatesDetail
+                        coordinates={
+                          typeof selectedCard.listing_coordinates === "string"
+                            ? JSON.parse(selectedCard.listing_coordinates)
+                            : selectedCard.listing_coordinates
                         }
                       />
                     )}
@@ -498,10 +566,10 @@ const RealEstate = () => {
                         <div key={index} className="relative w-32 h-32">
                           <Image
                             src={img}
-                            alt={`Listing ${index}`}
+                            alt={`Property ${index}`}
                             fill
                             className="object-cover rounded-md border"
-                            unoptimized={!img.startsWith('/')} // Only optimize local images
+                            unoptimized={!img.startsWith('/')}
                           />
                         </div>
                       ))}
@@ -518,31 +586,19 @@ const RealEstate = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Listing</h2>
+                <h2 className="text-xl font-semibold">Delete Real Estate</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  ×
                 </button>
               </div>
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this listing? This action
-                  cannot be undone.
+                  Are you sure you want to delete this real estate listing? This
+                  action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -577,19 +633,7 @@ const RealEstate = () => {
                   className="text-gray-500 hover:text-gray-700"
                   disabled={isUpdating}
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  ×
                 </button>
               </div>
 
@@ -601,21 +645,23 @@ const RealEstate = () => {
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
-                      <div key={index} className="relative group w-24 h-24">
+                      <div key={index} className="relative group">
                         {img.isNew ? (
                           <img
                             src={img.preview}
                             alt={`Preview ${index}`}
-                            className="w-full h-full object-cover rounded-md border"
+                            className="w-24 h-24 object-cover rounded-md border"
                           />
                         ) : (
-                          <Image
-                            src={img.url}
-                            alt={`Preview ${index}`}
-                            fill
-                            className="object-cover rounded-md border"
-                            unoptimized={!img.url.startsWith('/')}
-                          />
+                          <div className="relative w-24 h-24">
+                            <Image
+                              src={img.url}
+                              alt={`Preview ${index}`}
+                              fill
+                              className="object-cover rounded-md border"
+                              unoptimized={!img.url.startsWith('/')}
+                            />
+                          </div>
                         )}
                         <button
                           type="button"
@@ -683,6 +729,23 @@ const RealEstate = () => {
                             </option>
                           ))}
                         </select>
+                      ) : field.type === "textarea" ? (
+                        <textarea
+                          name={field.name}
+                          value={formData[field.name] || ""}
+                          onChange={handleFormChange}
+                          required={field.required}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          rows={3}
+                        />
+                      ) : field.type === "checkbox" ? (
+                        <input
+                          type="checkbox"
+                          name={field.name}
+                          checked={formData[field.name] || false}
+                          onChange={handleFormChange}
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
                       ) : (
                         <input
                           type={field.type}
@@ -725,7 +788,11 @@ const RealEstate = () => {
                       </label>
                       <div className="p-2 bg-gray-100 rounded-md">
                         <pre className="text-xs break-all">
-                          {JSON.stringify(JSON.parse(formData.listing_coordinates), null, 2)}
+                          {JSON.stringify(
+                            JSON.parse(formData.listing_coordinates),
+                            null,
+                            2
+                          )}
                         </pre>
                       </div>
                     </div>
@@ -779,6 +846,51 @@ const RealEstate = () => {
             </div>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex justify-end items-center mt-4">
+          <div className="flex space-x-2 items-center justify-ends">
+            {/* Prev Button */}
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasPrev && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/left.png" alt="" />
+            </button>
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchData(page)}
+                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+                    ${
+                      page === pagination.currentPage
+                        ? "bg-yellow-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasNext && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/right.png" alt="" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ToastContainer
@@ -796,10 +908,57 @@ const RealEstate = () => {
   );
 };
 
+const CoordinatesDetail = ({ coordinates }) => {
+  const [address, setAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (
+      coordinates?.coordinates &&
+      coordinates.coordinates.length === 2 &&
+      window.google
+    ) {
+      setLoading(true);
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: coordinates.coordinates[1],
+        lng: coordinates.coordinates[0],
+      };
+
+      geocoder.geocode({ location: latLng }, (results, status) => {
+        setLoading(false);
+        if (status === "OK" && results[0]) {
+          setAddress(results[0].formatted_address);
+        }
+      });
+    }
+  }, [coordinates]);
+
+  return (
+    <div className="col-span-full mb-4">
+      <div className="text-sm font-medium text-gray-700 mb-1">
+        Location Details
+      </div>
+      <div className="bg-gray-50 p-3 rounded-md">
+        {loading ? (
+          <div className="text-gray-500 italic">Loading address...</div>
+        ) : address ? (
+          <div>
+            <span className="font-medium">Address:</span> {address}
+          </div>
+        ) : (
+          <div className="text-gray-500 italic">
+            Could not determine address
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const DetailItem = ({ label, value }) => {
-  const displayValue = typeof value === 'object' 
-    ? JSON.stringify(value) 
-    : value;
+  const displayValue =
+    typeof value === "object" ? JSON.stringify(value) : value;
 
   return (
     <div className="mb-2">

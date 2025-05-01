@@ -4,16 +4,16 @@ import Link from "next/link";
 import BackButton from "@/app/components/BackButton";
 
 const categories = [
-  { name: "Vehicles", slug: "Vehicles", endpoint: "vehicle" },
-  { name: "Real Estate", slug: "realestate", endpoint: "realestate" },
+  { name: "Vehicles", slug: "Vehicles", endpoint: "vehicle",category: "Vehicles" },
+  { name: "Real Estate", slug: "realestate", endpoint: "realestate", category:"Real Estate" },
   // { name: "Services", slug: "services", endpoint: "services" },
-  { name: "Events", slug: "events", endpoint: "events" },
-  { name: "Jobs", slug: "jobs", endpoint: "jobs" },
-  { name: "Electronics", slug: "electronics", endpoint: "electronics" },
-  { name: "Furniture", slug: "furniture", endpoint: "furniture" },
-  { name: "Fashion", slug: "fashion", endpoint: "fashion" },
-  { name: "Kids", slug: "kids", endpoint: "kids" },
-  { name: "Sports & Hobby", slug: "sportsandhobby", endpoint: "sportshobby" },
+  { name: "Events", slug: "events", endpoint: "events", category:"Events" },
+  { name: "Jobs", slug: "jobs", endpoint: "jobs", category:"jobs" },
+  { name: "Electronics", slug: "electronics", endpoint: "electronics", category:"Electronics" },
+  { name: "Furniture", slug: "furniture", endpoint: "furniture", category:"Furniture" },
+  { name: "Fashion", slug: "fashion", endpoint: "fashion", category:"Fashion" },
+  { name: "Kids", slug: "kids", endpoint: "kids",category:"Kids" },
+  { name: "Sports & Hobby", slug: "sportsandhobby", endpoint: "sportshobby", category:"Sports & Hobby" },
 ];
 
 const Categories = () => {
@@ -31,7 +31,7 @@ const Categories = () => {
             key={category.slug} 
             href={{
               pathname: `/pages/listing/addlisting/${category.slug}`,
-              query: { endpoint: category.endpoint }
+              query: { endpoint: category.endpoint , category: category.category }, // Pass the endpoint and category as query parameters
             }}
           >
             <div className="bg-[#ffcc35] px-6 py-4 hover:bg-gray-300 transition-all duration-300 rounded-md flex items-center">

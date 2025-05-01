@@ -10,6 +10,8 @@ const Form = () => {
   const { slug, name } = useParams();
   const searchParams = useSearchParams();
   const endpoint = searchParams.get("endpoint");
+  const category = searchParams.get("category");
+  const subcategory = searchParams.get("subcategory");
 
   const [commonFields, setCommonFields] = useState([]);
   const [specificFields, setSpecificFields] = useState([]);
@@ -100,8 +102,8 @@ const Form = () => {
 
     try {
       const formPayload = new FormData();
-      formPayload.append("category", slug);
-      formPayload.append("subcategory", name);
+      formPayload.append("category", category);
+      formPayload.append("subcategory", subcategory);
 
       if (coordinates) {
         formPayload.append("listing_coordinates", JSON.stringify(coordinates));
@@ -234,7 +236,7 @@ const Form = () => {
       >
         <h1 className="text-2xl font-bold mb-6">
           {slug && slug.charAt(0).toUpperCase() + slug.slice(1)} -
-          {name && name.charAt(0).toUpperCase() + name.slice(1)}
+          {subcategory && subcategory.charAt(0).toUpperCase() + subcategory.slice(1)}
         </h1>
 
         {imagePreview && (

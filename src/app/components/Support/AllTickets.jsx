@@ -383,8 +383,7 @@ const AllTickets = () => {
         rows={rows}
         onPage={onPage}
         scrollHeight="700px"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
         tableStyle={{ minWidth: "100rem" }}
         className="custom-paginator"
         loading={loading}

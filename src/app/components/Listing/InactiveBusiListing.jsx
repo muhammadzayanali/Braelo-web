@@ -1,12 +1,104 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
+import {
+  getData,
+  postData,
+  updateListData,
+  deleteData,
+} from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
+import { Update_data } from "./Data";
 
-const Furniture = () => {
-  // State management
+const CATEGORY_ENDPOINTS = {
+  "Fashion": "fashion",
+  "Sports & Hobby": "sporthobby",
+  "Furniture": "furniture",
+  "Electronics": "electronics",
+  "Jobs": "jobs",
+  "Vehicles": "vehicles",
+  "Kids": "kids",
+  "Events": "events",
+  "Real Estate": "realestate"
+};
+
+const CoordinatesToAddress = ({ coordinates }) => {
+  const [address, setAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const getAddressFromCoordinates = async (coords) => {
+    if (!coords || coords.length !== 2 || !window.google) return null;
+    
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: parseFloat(coords[1]),
+        lng: parseFloat(coords[0])
+      };
+
+      return new Promise((resolve) => {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            resolve(results[0].formatted_address);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (!coordinates || coordinates.length !== 2) return;
+
+    const convertToAddress = async () => {
+      setLoading(true);
+      try {
+        const addr = await getAddressFromCoordinates(coordinates);
+        setAddress(addr);
+      } catch (error) {
+        console.error('Error converting coordinates:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    convertToAddress();
+  }, [coordinates]);
+
+  return (
+    <div className="mb-2">
+      <span className="text-sm font-medium text-gray-500">Location: </span>
+      {loading ? (
+        <span className="text-sm text-gray-800">Loading address...</span>
+      ) : address ? (
+        <span className="text-sm text-gray-800">{address}</span>
+      ) : (
+        <span className="text-sm text-gray-800">
+          Coordinates: {coordinates[1]?.toFixed?.(6) || 'N/A'}, {coordinates[0]?.toFixed?.(6) || 'N/A'}
+        </span>
+      )}
+    </div>
+  );
+};
+
+const DetailItem = ({ label, value }) => {
+  const displayValue =
+    typeof value === "object" ? JSON.stringify(value) : value;
+
+  return (
+    <div className="mb-2">
+      <span className="text-sm font-medium text-gray-500">{label}: </span>
+      <span className="text-sm text-gray-800">{displayValue}</span>
+    </div>
+  );
+};
+
+const InactiveBusiListing = ({ user_id }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -21,11 +113,13 @@ const Furniture = () => {
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
+    pageSize: 10,
+    totalItems: 0
   });
   const [autocomplete, setAutocomplete] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [currentFormFields, setCurrentFormFields] = useState([]);
 
-  // Load Google Maps script
   useEffect(() => {
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
@@ -37,12 +131,11 @@ const Furniture = () => {
     } else {
       setMapLoaded(true);
     }
-    
+
     fetchData();
-    
+
     return () => {
-      // Clean up image preview URLs
-      imagePreviews.forEach(preview => {
+      imagePreviews.forEach((preview) => {
         if (preview.isNew) {
           URL.revokeObjectURL(preview.preview);
         }
@@ -50,36 +143,35 @@ const Furniture = () => {
     };
   }, []);
 
-  // Fetch data with pagination
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await getData(`/listing/paginate/furniture?page=${page}`);
-      
+      const response = await getData(
+        `/admin-panel/business/fetch/listings?user_id=${user_id}&is_active=false`
+      );
       if (response?.data) {
+        const listingsArray = Object.values(response.data);
+        
         setData(
-          response.data.results.map((item) => ({
+          listingsArray.map((item) => ({
             image: item.pictures?.[0] || "/img1.png",
             icons: ["/g1.png", "/g2.png", "/g3.png"],
             title: item.title || "No Title",
-            description: `Listing ID ${
-              item?.id?.substring?.(0, 8)?.toUpperCase() || "N/A"
-            } ${
-              item?.created_at
-                ? new Date(item.created_at).toLocaleDateString()
-                : ""
-            }`,
-            price: item.price ? `$${item.price}` : "$0",
-            status: item.is_active ? "active" : "inactive",
+            description: `Listing ID: ${item?.id?.substring?.(0, 8)?.toUpperCase() || "N/A"} • ${item?.created_at ? new Date(item.created_at).toLocaleDateString() : ""}`,
+            price: item.price ? `$${parseFloat(item.price).toFixed(2)}` : "",
+            status: item.is_active ? true : false,
             originalData: item,
+            salary: item.salary_range
           }))
         );
 
         setPagination({
           currentPage: page,
-          totalPages: Math.ceil(response.data.count / 10),
-          hasNext: !!response.data.next,
-          hasPrev: !!response.data.previous,
+          totalPages: Math.ceil(listingsArray.length / 10),
+          hasNext: listingsArray.length > page * 10,
+          hasPrev: page > 1,
+          pageSize: 10,
+          totalItems: listingsArray.length
         });
       }
     } catch (error) {
@@ -93,15 +185,14 @@ const Furniture = () => {
     }
   };
 
-  // Reverse geocode coordinates to address
   const reverseGeocode = async (coordinates) => {
     if (!mapLoaded || !window.google) return;
-    
+
     try {
       const geocoder = new window.google.maps.Geocoder();
       const latLng = {
         lat: coordinates[1],
-        lng: coordinates[0]
+        lng: coordinates[0],
       };
 
       return new Promise((resolve) => {
@@ -119,25 +210,16 @@ const Furniture = () => {
     }
   };
 
-  // Handle edit click
   const handleEditClick = async (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
-    
-    // Parse coordinates
-    let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
-    try {
-      if (originalData.listing_coordinates) {
-        coordinates = typeof originalData.listing_coordinates === 'string' 
-          ? JSON.parse(originalData.listing_coordinates) 
-          : originalData.listing_coordinates;
-      }
-    } catch (e) {
-      console.error("Error parsing coordinates:", e);
-    }
 
-    // Get address from coordinates
-    let address = originalData.location || "";
+    let coordinates = originalData.listing_coordinates || { 
+      type: "Point", 
+      coordinates: [-0.1275862, 51.5072178]
+    };
+
+    let address = "";
     if (coordinates.coordinates && coordinates.coordinates.length === 2) {
       const geocodedAddress = await reverseGeocode(coordinates.coordinates);
       if (geocodedAddress) {
@@ -145,19 +227,28 @@ const Furniture = () => {
       }
     }
 
-    setFormData({
+    const initialFormData = {
       ...originalData,
-      negotiable: originalData?.negotiable || "NO",
-      condition: originalData?.condition || "NEW",
-      subcategory: originalData?.subcategory || "Custom Furniture",
-      category: originalData?.category || "Furniture",
-      donation: originalData?.donation || "NO",
-      from_business: originalData?.from_business || "true",
+      price: originalData.price || "0",
+      keywords: Array.isArray(originalData.keywords) 
+        ? originalData.keywords.join(", ") 
+        : originalData.keywords || "",
+      listing_coordinates: JSON.stringify(coordinates),
       location: address,
-      listing_coordinates: JSON.stringify(coordinates)
+    };
+
+    const category = originalData.category || "";
+    const formFields = Update_data[category] || [];
+    setCurrentFormFields(formFields);
+
+    formFields.forEach(field => {
+      if (!(field.name in initialFormData)) {
+        initialFormData[field.name] = field.type === 'checkbox' ? false : '';
+      }
     });
-    
-    // Handle image previews
+
+    setFormData(initialFormData);
+
     if (originalData.pictures && originalData.pictures.length > 0) {
       setImagePreviews(
         originalData.pictures.map((pic) => ({
@@ -168,39 +259,41 @@ const Furniture = () => {
     } else {
       setImagePreviews([]);
     }
-    
+
     setIsEditModalOpen(true);
 
-    // Initialize Google Maps autocomplete after a slight delay
     setTimeout(() => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
         if (input) {
-          const autocomplete = new window.google.maps.places.Autocomplete(input, {
-            types: ["geocode"],
-          });
+          const autocomplete = new window.google.maps.places.Autocomplete(
+            input,
+            {
+              types: ["geocode"],
+            }
+          );
           setAutocomplete(autocomplete);
-          
+
           autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
             if (!place.geometry) {
               toast.warning("No details available for this location");
               return;
             }
-            
+
             const location = place.formatted_address;
             const coordinates = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            
-            setFormData(prev => ({
+
+            setFormData((prev) => ({
               ...prev,
               location,
               listing_coordinates: JSON.stringify({
                 type: "Point",
-                coordinates: [coordinates.lng, coordinates.lat]
-              })
+                coordinates: [coordinates.lng, coordinates.lat],
+              }),
             }));
           });
         }
@@ -208,7 +301,6 @@ const Furniture = () => {
     }, 500);
   };
 
-  // Modal handlers
   const handleOpenDetail = (card) => {
     setSelectedCard(card.originalData || card);
     setIsDetailModalOpen(true);
@@ -237,56 +329,57 @@ const Furniture = () => {
     setSelectedCard(null);
   };
 
-  // Form handlers
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const isValidImage = (file) => {
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+
     if (!validTypes.includes(file.type)) {
       toast.error(`Invalid file type: ${file.type}`);
       return false;
     }
-    
+
     if (file.size > MAX_SIZE) {
-      toast.error(`File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`);
+      toast.error(
+        `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`
+      );
       return false;
     }
-    
+
     return true;
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const MAX_IMAGES = 10;
-    
+
     if (files.length + imagePreviews.length > MAX_IMAGES) {
       toast.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
-    
-    const validFiles = files.filter(file => isValidImage(file));
-    
+
+    const validFiles = files.filter((file) => isValidImage(file));
+
     if (validFiles.length > 0) {
-      const newImagePreviews = validFiles.map(file => ({
+      const newImagePreviews = validFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
-        isNew: true
+        isNew: true,
       }));
-      
-      setImagePreviews(prev => [...prev, ...newImagePreviews]);
+
+      setImagePreviews((prev) => [...prev, ...newImagePreviews]);
     }
   };
 
   const removeImage = (index) => {
-    setImagePreviews(prev => {
+    setImagePreviews((prev) => {
       const newPreviews = [...prev];
       if (newPreviews[index].isNew) {
         URL.revokeObjectURL(newPreviews[index].preview);
@@ -296,15 +389,20 @@ const Furniture = () => {
     });
   };
 
-  // API operations
+  const getCategoryEndpoint = (category) => {
+    const normalizedCategory = category?.toLowerCase()?.trim();
+    return CATEGORY_ENDPOINTS[normalizedCategory] || normalizedCategory || "listings";
+  };
+
   const handleUpdateListing = async (e) => {
     e.preventDefault();
     if (!selectedCard) return;
-    
+
     try {
       setIsUpdating(true);
-      const listingId = selectedCard.originalData?.id || selectedCard.id;
-      
+      const listingId = selectedCard.originalData?.listing_id || selectedCard.listing_id;
+      console.log("Listing ID:", listingId);
+
       if (!listingId) {
         toast.error("Invalid listing ID");
         return;
@@ -312,30 +410,15 @@ const Furniture = () => {
 
       const form = new FormData();
 
-      // Append all form data
-      form.append("category", formData.category || 'Furniture');
-      form.append("subcategory", formData.subcategory || 'Custom Furniture');
-      form.append("title", formData.title || '');
-      form.append("description", formData.description || '');
-      form.append("location", formData.location || '');
-      form.append("material_type", formData.material_type || 'Wood');
-      form.append("color", formData.color || 'Natural Wood');
-      form.append("dimensions", formData.dimensions || '48x12x72 inches');
-      form.append("condition", formData.condition || 'NEW');
-      form.append("price", String(formData.price || 0));
-      form.append("negotiable", formData.negotiable || 'NO');
-      form.append("donation", formData.donation || 'NO');
-      form.append("from_business", formData.from_business || 'true');
-      form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
-      
-      // Handle keywords
-      if (formData.keywords) {
-        form.append("keywords", Array.isArray(formData.keywords) 
-          ? formData.keywords.join(',') 
-          : formData.keywords);
+      currentFormFields.forEach(field => {
+        const value = formData[field.name] || "";
+        form.append(field.name, value);
+      });
+
+      if (formData.listing_coordinates) {
+        form.append("listing_coordinates", formData.listing_coordinates);
       }
 
-      // Handle images
       imagePreviews.forEach((img, index) => {
         if (img.isNew) {
           form.append(`pictures`, img.file);
@@ -344,28 +427,32 @@ const Furniture = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/furniture/${listingId}`,
-        form
-      );
+      const category = formData.category || selectedCard.originalData?.category || "";
+      const categoryEndpoint = getCategoryEndpoint(category);
       
-      toast.success("Furniture listing updated successfully!");
+      await updateListData(`/admin-panel/${categoryEndpoint}/${listingId}`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success("Listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
-      let errorMsg = "Failed to update furniture listing";
-      
+      let errorMsg = "Failed to update listing";
+
       if (error.response) {
         if (error.response.status === 404) {
           errorMsg = "Resource not found (404) - please check the endpoint";
         } else if (error.response.data?.message) {
           errorMsg = error.response.data.message;
         } else if (error.response.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).join(', ');
+          errorMsg = Object.values(error.response.data.errors).join(", ");
         }
       }
-      
+
       toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
@@ -375,68 +462,92 @@ const Furniture = () => {
   const handleDeleteListing = async () => {
     const listingData = selectedCard?.originalData || selectedCard;
     if (!listingData) return;
-    
+
     try {
       const form = new FormData();
-      form.append('listing_id', listingData.id || '');
-      form.append('category', 'Furniture');
-
+      form.append('listing_id', listingData.listing_id || '');
+      form.append('category', listingData.category || '');
+      console.log("Form data for deletion:", form.get("listing_id"), form.get("category"));
       await deleteData("/admin-panel/delete", form);
 
       await fetchData(pagination.currentPage);
-      toast.success("Furniture listing deleted successfully!");
+      toast.success("Listing deleted successfully!");
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error(error.response?.data?.message || "Failed to delete furniture listing");
+      toast.error(error.response?.data?.message || "Failed to delete listing");
     }
   };
 
-  // Form fields configuration
-  const formFields = [
-    { name: 'title', label: 'Title', type: 'text', required: true },
-    { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'price', label: 'Price', type: 'number', required: true },
-    { 
-      name: 'negotiable', 
-      label: 'Negotiable', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
-    },
-    { 
-      name: 'condition', 
-      label: 'Condition', 
-      type: 'select', 
-      options: ['NEW', 'USED', 'REFURBISHED'],
-      required: true 
-    },
-    { name: 'material_type', label: 'Material Type', type: 'text', required: true },
-    { name: 'color', label: 'Color', type: 'text', required: true },
-    { name: 'dimensions', label: 'Dimensions', type: 'text', required: true },
-    { 
-      name: 'donation', 
-      label: 'Donation', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
-    },
-    { 
-      name: 'from_business', 
-      label: 'From Business', 
-      type: 'select', 
-      options: ['true', 'false'],
-      required: true 
-    },
-    { 
-      name: 'subcategory', 
-      label: 'Subcategory', 
-      type: 'select', 
-      options: ['Custom Furniture', 'Sofas & Couches', 'Tables & Chairs', 'Beds & Mattresses', 'Wardrobes & Storage', 'Office Furniture', 'Other Furniture'],
-      required: true 
-    },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false }
-  ];
+  const renderFormField = (field) => {
+    switch (field.type) {
+      case "select":
+        return (
+          <select
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFormChange}
+            required={field.required}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Select {field.label}</option>
+            {field.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      case "textarea":
+        return (
+          <textarea
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFormChange}
+            required={field.required}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            rows={3}
+          />
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              name={field.name}
+              checked={formData[field.name] || false}
+              onChange={handleFormChange}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label className="ml-2 block text-sm text-gray-700">
+              {field.label}
+            </label>
+          </div>
+        );
+      case "datetime-local":
+        return (
+          <input
+            type="datetime-local"
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFormChange}
+            required={field.required}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        );
+      default:
+        return (
+          <input
+            type={field.type}
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={handleFormChange}
+            required={field.required}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        );
+    }
+  };
 
   if (loading) {
     return (
@@ -449,28 +560,6 @@ const Furniture = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
-
-        {/* Furniture Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
             <ListingCard
@@ -479,8 +568,9 @@ const Furniture = () => {
               icons={card.icons}
               price={card.price}
               title={card.title}
+              salary={card.salary}
               description={card.description}
-              toggle={<CardToggle status={card.status === "active"} />}
+              toggle={<CardToggle status={card.status === true} />}
               onIconClick={(icon) => {
                 if (icon === "/g1.png") handleEditClick(card);
                 if (icon === "/g2.png") handleDeleteClick(card);
@@ -490,12 +580,49 @@ const Furniture = () => {
           ))}
         </div>
 
-        {/* Detail Modal */}
+        {/* New Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-600">
+            Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of {pagination.totalItems} entries
+          </div>
+
+          <div className="flex space-x-2 items-center">
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${pagination.hasPrev && !loading ? 'bg-gray-300 text-gray-800 hover:bg-gray-400' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            >
+              <img src="/left.png" alt="" />
+            </button>
+
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => fetchData(page)}
+                className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+                  ${page === pagination.currentPage
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${pagination.hasNext && !loading ? 'bg-gray-300 text-gray-800 hover:bg-gray-400' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            >
+              <img src="/right.png" alt="" />
+            </button>
+          </div>
+        </div>
+
         {isDetailModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Furniture Details</h2>
+                <h2 className="text-xl font-semibold">Listing Details</h2>
                 <button
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -510,50 +637,59 @@ const Furniture = () => {
                     {selectedCard?.title}
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    {selectedCard?.description}
+                    Listing ID: {selectedCard?.id?.substring?.(0, 8)?.toUpperCase() || "N/A"} • 
+                    {selectedCard?.created_at
+                      ? ` Created: ${new Date(selectedCard.created_at).toLocaleDateString()}`
+                      : ""}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.price ? selectedCard.price : "Price not set"}
+                    {selectedCard?.price
+                      ? `$${parseFloat(selectedCard.price).toFixed(2)}`
+                      : "Price not set"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCard?.material_type && (
-                      <DetailItem label="Material Type" value={selectedCard.material_type} />
-                    )}
-                    {selectedCard?.color && (
-                      <DetailItem label="Color" value={selectedCard.color} />
-                    )}
-                    {selectedCard?.dimensions && (
-                      <DetailItem label="Dimensions" value={selectedCard.dimensions} />
-                    )}
-                    {selectedCard?.condition && (
-                      <DetailItem label="Condition" value={selectedCard.condition} />
-                    )}
-                    {selectedCard?.negotiable && (
-                      <DetailItem label="Negotiable" value={selectedCard.negotiable} />
-                    )}
-                    {selectedCard?.donation && (
-                      <DetailItem label="Donation" value={selectedCard.donation} />
-                    )}
-                    {selectedCard?.location && (
-                      <DetailItem label="Location" value={selectedCard.location} />
+                    {selectedCard?.category && (
+                      <DetailItem
+                        label="Category"
+                        value={selectedCard.category}
+                      />
                     )}
                     {selectedCard?.subcategory && (
-                      <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                      <DetailItem
+                        label="Subcategory"
+                        value={selectedCard.subcategory}
+                      />
                     )}
-                    {selectedCard?.from_business && (
-                      <DetailItem label="From Business" value={selectedCard.from_business} />
+                    {selectedCard?.keywords && (
+                      <DetailItem
+                        label="Keywords"
+                        value={Array.isArray(selectedCard.keywords) 
+                          ? selectedCard.keywords.join(", ") 
+                          : selectedCard.keywords}
+                      />
                     )}
                     {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
-                          typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
+                      <CoordinatesToAddress 
+                        coordinates={
+                          typeof selectedCard.listing_coordinates === "string"
+                            ? JSON.parse(selectedCard.listing_coordinates)?.coordinates
+                            : selectedCard.listing_coordinates?.coordinates
                         }
                       />
                     )}
+                    <DetailItem
+                      label="From Business"
+                      value={selectedCard?.from_business ? "Yes" : "No"}
+                    />
+                    <DetailItem
+                      label="Status"
+                      value={selectedCard?.is_active ? "Active" : "Inactive"}
+                    />
+                    <DetailItem
+                      label="Clicks"
+                      value={selectedCard?.listing_clicks || 0}
+                    />
                   </div>
                 </div>
 
@@ -565,7 +701,7 @@ const Furniture = () => {
                         <img
                           key={index}
                           src={img}
-                          alt={`Furniture ${index}`}
+                          alt={`Listing ${index}`}
                           className="w-32 h-32 object-cover rounded-md border"
                         />
                       ))}
@@ -577,12 +713,11 @@ const Furniture = () => {
           </div>
         )}
 
-        {/* Delete Modal */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Furniture</h2>
+                <h2 className="text-xl font-semibold">Delete Listing</h2>
                 <button
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -593,7 +728,8 @@ const Furniture = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this furniture listing? This action cannot be undone.
+                  Are you sure you want to delete this listing? This
+                  action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -617,12 +753,11 @@ const Furniture = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
         {isEditModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Edit Furniture Listing</h2>
+                <h2 className="text-xl font-semibold">Edit Listing</h2>
                 <button
                   onClick={handleCloseEditModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -633,10 +768,9 @@ const Furniture = () => {
               </div>
 
               <form onSubmit={handleUpdateListing} className="p-6">
-                {/* Image Upload Section */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Furniture Images
+                    Listing Images
                   </label>
                   <div className="flex flex-wrap gap-4 mb-4">
                     {imagePreviews.map((img, index) => (
@@ -682,57 +816,23 @@ const Furniture = () => {
                     />
                   </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    Upload high-quality images of your furniture (max 10 images)
+                    Upload high-quality images of your listing (max 10 images)
                   </p>
                 </div>
 
-                {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {formFields.map((field) => (
+                  {currentFormFields.map((field) => (
                     <div key={field.name} className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </label>
-
-                      {field.type === "select" ? (
-                        <select
-                          name={field.name}
-                          value={formData[field.name] || ""}
-                          onChange={handleFormChange}
-                          required={field.required}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Select {field.label}</option>
-                          {field.options.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : field.type === "textarea" ? (
-                        <textarea
-                          name={field.name}
-                          value={formData[field.name] || ""}
-                          onChange={handleFormChange}
-                          required={field.required}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                          rows={3}
-                        />
-                      ) : (
-                        <input
-                          type={field.type}
-                          name={field.name}
-                          value={formData[field.name] || ""}
-                          onChange={handleFormChange}
-                          required={field.required}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      )}
+                      {renderFormField(field)}
                     </div>
                   ))}
 
-                  {/* Location Field with Autocomplete */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Location
@@ -753,7 +853,6 @@ const Furniture = () => {
                     </p>
                   </div>
 
-                  {/* Display Coordinates */}
                   {formData.listing_coordinates && (
                     <div className="mb-4 col-span-full">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -761,7 +860,11 @@ const Furniture = () => {
                       </label>
                       <div className="p-2 bg-gray-100 rounded-md">
                         <pre className="text-xs break-all">
-                          {JSON.stringify(JSON.parse(formData.listing_coordinates), null, 2)}
+                          {JSON.stringify(
+                            JSON.parse(formData.listing_coordinates),
+                            null,
+                            2
+                          )}
                         </pre>
                       </div>
                     </div>
@@ -832,17 +935,4 @@ const Furniture = () => {
   );
 };
 
-const DetailItem = ({ label, value }) => {
-  const displayValue = typeof value === 'object' 
-    ? JSON.stringify(value) 
-    : value;
-
-  return (
-    <div className="mb-2">
-      <span className="text-sm font-medium text-gray-500">{label}: </span>
-      <span className="text-sm text-gray-800">{displayValue}</span>
-    </div>
-  );
-};
-
-export default Furniture;
+export default InactiveBusiListing;

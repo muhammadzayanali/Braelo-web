@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateData, deleteData } from "@/app/API/method";
+import { getData, postData, updateListData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
@@ -346,14 +346,9 @@ const Sports = () => {
         }
       });
 
-      await updateData(
+      await updateListData(
         `/admin-panel/sportshobby/${listingId}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
+        form
       );
       
       toast.success("Sports listing updated successfully!");
