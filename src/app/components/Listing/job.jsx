@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// import { useRouter } from "next/router";
 import { getData, postData, updateListData, deleteData } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
@@ -38,12 +37,12 @@ const Jobs = () => {
     } else {
       setMapLoaded(true);
     }
-    
+
     fetchData();
-    
+
     return () => {
       // Clean up image preview URLs
-      imagePreviews.forEach(preview => {
+      imagePreviews.forEach((preview) => {
         if (preview.isNew) {
           URL.revokeObjectURL(preview.preview);
         }
@@ -56,7 +55,7 @@ const Jobs = () => {
     try {
       setLoading(true);
       const response = await getData(`/listing/paginate/jobs?page=${page}`);
-      
+
       if (response?.data) {
         setData(
           response.data.results.map((item) => ({
@@ -70,7 +69,7 @@ const Jobs = () => {
                 ? new Date(item.created_at).toLocaleDateString()
                 : ""
             }`,
-            salary: item.salary_range,
+            salary: item.salary_range || "Not specified",
             status: item.is_active ? "active" : "inactive",
             originalData: item,
           }))
@@ -85,10 +84,9 @@ const Jobs = () => {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error(error.response?.data?.message || "Failed to load listings");
+      toast.error(error.response?.data?.message || "Failed to load job listings");
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
-        // router.push('/login');
       }
     } finally {
       setLoading(false);
@@ -98,12 +96,12 @@ const Jobs = () => {
   // Reverse geocode coordinates to address
   const reverseGeocode = async (coordinates) => {
     if (!mapLoaded || !window.google) return;
-    
+
     try {
       const geocoder = new window.google.maps.Geocoder();
       const latLng = {
         lat: coordinates[1],
-        lng: coordinates[0]
+        lng: coordinates[0],
       };
 
       return new Promise((resolve) => {
@@ -125,14 +123,15 @@ const Jobs = () => {
   const handleEditClick = async (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
-    
+
     // Parse coordinates
     let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
     try {
       if (originalData.listing_coordinates) {
-        coordinates = typeof originalData.listing_coordinates === 'string' 
-          ? JSON.parse(originalData.listing_coordinates) 
-          : originalData.listing_coordinates;
+        coordinates =
+          typeof originalData.listing_coordinates === "string"
+            ? JSON.parse(originalData.listing_coordinates)
+            : originalData.listing_coordinates;
       }
     } catch (e) {
       console.error("Error parsing coordinates:", e);
@@ -154,10 +153,10 @@ const Jobs = () => {
       category: originalData?.category || "Jobs",
       subcategory: originalData?.subcategory || "Home Office",
       location: address,
-      salary: originalData?.salary_range || "",
-      listing_coordinates: JSON.stringify(coordinates)
+      salary_range: originalData?.salary_range || "",
+      listing_coordinates: JSON.stringify(coordinates),
     });
-    
+
     // Handle image previews
     if (originalData.pictures && originalData.pictures.length > 0) {
       setImagePreviews(
@@ -169,7 +168,7 @@ const Jobs = () => {
     } else {
       setImagePreviews([]);
     }
-    
+
     setIsEditModalOpen(true);
 
     // Initialize Google Maps autocomplete after a slight delay
@@ -177,31 +176,34 @@ const Jobs = () => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
         if (input) {
-          const autocomplete = new window.google.maps.places.Autocomplete(input, {
-            types: ["geocode"],
-          });
+          const autocomplete = new window.google.maps.places.Autocomplete(
+            input,
+            {
+              types: ["geocode"],
+            }
+          );
           setAutocomplete(autocomplete);
-          
+
           autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
             if (!place.geometry) {
               toast.warning("No details available for this location");
               return;
             }
-            
+
             const location = place.formatted_address;
             const coordinates = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            
-            setFormData(prev => ({
+
+            setFormData((prev) => ({
               ...prev,
               location,
               listing_coordinates: JSON.stringify({
                 type: "Point",
-                coordinates: [coordinates.lng, coordinates.lat]
-              })
+                coordinates: [coordinates.lng, coordinates.lat],
+              }),
             }));
           });
         }
@@ -241,53 +243,55 @@ const Jobs = () => {
   // Form handlers
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const isValidImage = (file) => {
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+
     if (!validTypes.includes(file.type)) {
       toast.error(`Invalid file type: ${file.type}`);
       return false;
     }
-    
+
     if (file.size > MAX_SIZE) {
-      toast.error(`File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`);
+      toast.error(
+        `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`
+      );
       return false;
     }
-    
+
     return true;
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const MAX_IMAGES = 10;
-    
+
     if (files.length + imagePreviews.length > MAX_IMAGES) {
       toast.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
-    
-    const validFiles = files.filter(file => isValidImage(file));
-    
+
+    const validFiles = files.filter((file) => isValidImage(file));
+
     if (validFiles.length > 0) {
-      const newImagePreviews = validFiles.map(file => ({
+      const newImagePreviews = validFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
-        isNew: true
+        isNew: true,
       }));
-      
-      setImagePreviews(prev => [...prev, ...newImagePreviews]);
+
+      setImagePreviews((prev) => [...prev, ...newImagePreviews]);
     }
   };
 
   const removeImage = (index) => {
-    setImagePreviews(prev => {
+    setImagePreviews((prev) => {
       const newPreviews = [...prev];
       if (newPreviews[index].isNew) {
         URL.revokeObjectURL(newPreviews[index].preview);
@@ -301,11 +305,11 @@ const Jobs = () => {
   const handleUpdateListing = async (e) => {
     e.preventDefault();
     if (!selectedCard) return;
-    
+
     try {
       setIsUpdating(true);
       const listingId = selectedCard.originalData?.id || selectedCard.id;
-      
+
       if (!listingId) {
         toast.error("Invalid listing ID");
         return;
@@ -314,24 +318,34 @@ const Jobs = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Jobs');
-      form.append("subcategory", formData.subcategory || 'Home Office');
-      form.append("title", formData.title || '');
-      form.append("job title", formData.job_tittle || '');
-      form.append("description", formData.description || '');
-      form.append("location", formData.location || '');
-      form.append("job_type", formData.job_type || 'FULL_TIME');
-      form.append("company", formData.company || '');
-      form.append("experience_level", formData.experience_level || '');
-      form.append("price", String(formData.price || 0));
-      form.append("negotiable", formData.negotiable || 'NO');
-      form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
-      
+      form.append("category", formData.category || "Jobs");
+      form.append("subcategory", formData.subcategory || "Home Office");
+      form.append("title", formData.title || "");
+      form.append("job_title", formData.job_title || "");
+      form.append("description", formData.description || "");
+      form.append("location", formData.location || "");
+      form.append("job_type", formData.job_type || "FULL_TIME");
+      form.append("company", formData.company || "");
+      form.append("experience_level", formData.experience_level || "");
+      form.append("salary_range", formData.salary_range || "");
+      form.append("negotiable", formData.negotiable || "NO");
+      form.append("required_skills", formData.required_skills || "");
+      form.append("employment_type", formData.employment_type || "");
+      form.append("working_hours", formData.working_hours || "");
+      form.append(
+        "listing_coordinates",
+        formData.listing_coordinates ||
+          '{"type":"Point","coordinates":[31.4494997,74.284469]}'
+      );
+
       // Handle keywords
       if (formData.keywords) {
-        form.append("keywords", Array.isArray(formData.keywords) 
-          ? formData.keywords.join(',') 
-          : formData.keywords);
+        form.append(
+          "keywords",
+          Array.isArray(formData.keywords)
+            ? formData.keywords.join(",")
+            : formData.keywords
+        );
       }
 
       // Handle images
@@ -343,28 +357,29 @@ const Jobs = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/jobs/${listingId}`,
-        form
-      );
-      
+      await updateListData(`/admin-panel/jobs/${listingId}`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       toast.success("Job listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
       let errorMsg = "Failed to update job listing";
-      
+
       if (error.response) {
         if (error.response.status === 404) {
           errorMsg = "Resource not found (404) - please check the endpoint";
         } else if (error.response.data?.message) {
           errorMsg = error.response.data.message;
         } else if (error.response.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).join(', ');
+          errorMsg = Object.values(error.response.data.errors).join(", ");
         }
       }
-      
+
       toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
@@ -374,11 +389,11 @@ const Jobs = () => {
   const handleDeleteListing = async () => {
     const listingData = selectedCard?.originalData || selectedCard;
     if (!listingData) return;
-    
+
     try {
       const form = new FormData();
-      form.append('listing_id', listingData.id || '');
-      form.append('category', 'Jobs');
+      form.append("listing_id", listingData.id || "");
+      form.append("category", "Jobs");
 
       await deleteData("/admin-panel/delete", form);
 
@@ -394,31 +409,36 @@ const Jobs = () => {
   // Form fields configuration
   const formFields = [
     { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Job Description", type: "textarea", required: true },
-      { name: "company", label: "Company", type: "text", required: true },
-      { name: "experience_level", label: "Experience Level", type: "text", required: true },
-      { name: "job_tittle", label: "Job title", type: "text", required: true },
-      { name: "required_skills", label: "Required Skills", type: "text", required: true },
-      { name: "employment_type", label: "Employment Type ", type: "text", required: true },
-      { name: "salary_range", label: "Salary", type: "text", required: true },
-      { name: "working_hours", label: "working hours", type: "number", required: true },
-      { 
-        name: "negotiable", 
-        label: "Negotiable", 
-        type: "select", 
-        options: ["YES", "NO"],
-        required: true 
-      },
-      { 
-        name: "job_type", 
-        label: "Job Type", 
-        type: "select", 
-        options: ["FULL_TIME", "PART_TIME", "CONTRACT", "TEMPORARY", "INTERNSHIP", "VOLUNTEER"],
-        required: true 
-      },
-      { name: "keywords", label: "Keywords (comma separated)", type: "text", required: false },
-      { name: "category", label: "Category", type: "text", required: true },
-      { name: "subcategory", label: "Subcategory", type: "text", required: true }
+    { name: "description", label: "Job Description", type: "textarea", required: true },
+    { name: "company", label: "Company", type: "text", required: true },
+    { name: "experience_level", label: "Experience Level", type: "text", required: true },
+    { name: "job_title", label: "Job Title", type: "text", required: true },
+    { name: "required_skills", label: "Required Skills", type: "text", required: true },
+    { name: "employment_type", label: "Employment Type", type: "text", required: true },
+    { name: "salary_range", label: "Salary Range", type: "text", required: true },
+    { name: "working_hours", label: "Working Hours", type: "number", required: true },
+    {
+      name: "negotiable",
+      label: "Negotiable",
+      type: "select",
+      options: ["YES", "NO"],
+      required: true,
+    },
+    {
+      name: "job_type",
+      label: "Job Type",
+      type: "select",
+      options: ["FULL_TIME", "PART_TIME", "CONTRACT", "TEMPORARY", "INTERNSHIP", "VOLUNTEER"],
+      required: true,
+    },
+    {
+      name: "keywords",
+      label: "Keywords (comma separated)",
+      type: "text",
+      required: false,
+    },
+    { name: "category", label: "Category", type: "text", required: true },
+    { name: "subcategory", label: "Subcategory", type: "text", required: true },
   ];
 
   if (loading) {
@@ -432,27 +452,6 @@ const Jobs = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
-
         {/* Job Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
@@ -496,7 +495,7 @@ const Jobs = () => {
                     {selectedCard?.description}
                   </p>
                   <p className="text-xl font-bold text-indigo-600 mb-4">
-                    {selectedCard?.salary ? selectedCard.salary : "Salary not set"}
+                    {selectedCard?.salary_range || "Salary not specified"}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -509,24 +508,35 @@ const Jobs = () => {
                     {selectedCard?.job_type && (
                       <DetailItem label="Job Type" value={selectedCard.job_type} />
                     )}
+                    {selectedCard?.job_title && (
+                      <DetailItem label="Job Title" value={selectedCard.job_title} />
+                    )}
+                    {selectedCard?.required_skills && (
+                      <DetailItem label="Required Skills" value={selectedCard.required_skills} />
+                    )}
+                    {selectedCard?.employment_type && (
+                      <DetailItem label="Employment Type" value={selectedCard.employment_type} />
+                    )}
+                    {selectedCard?.working_hours && (
+                      <DetailItem label="Working Hours" value={selectedCard.working_hours} />
+                    )}
                     {selectedCard?.location && (
                       <DetailItem label="Location" value={selectedCard.location} />
                     )}
                     {selectedCard?.negotiable && (
                       <DetailItem label="Negotiable" value={selectedCard.negotiable} />
                     )}
-                    {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
-                          typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
-                        }
-                      />
-                    )}
                     {selectedCard?.subcategory && (
                       <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                    )}
+                    {selectedCard?.listing_coordinates && (
+                      <CoordinatesDetail
+                        coordinates={
+                          typeof selectedCard.listing_coordinates === "string"
+                            ? JSON.parse(selectedCard.listing_coordinates)
+                            : selectedCard.listing_coordinates
+                        }
+                      />
                     )}
                   </div>
                 </div>
@@ -567,7 +577,8 @@ const Jobs = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this job listing? This action cannot be undone.
+                  Are you sure you want to delete this job listing? This action
+                  cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -666,7 +677,9 @@ const Jobs = () => {
                     <div key={field.name} className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </label>
 
                       {field.type === "select" ? (
@@ -735,7 +748,11 @@ const Jobs = () => {
                       </label>
                       <div className="p-2 bg-gray-100 rounded-md">
                         <pre className="text-xs break-all">
-                          {JSON.stringify(JSON.parse(formData.listing_coordinates), null, 2)}
+                          {JSON.stringify(
+                            JSON.parse(formData.listing_coordinates),
+                            null,
+                            2
+                          )}
                         </pre>
                       </div>
                     </div>
@@ -789,6 +806,51 @@ const Jobs = () => {
             </div>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex justify-end items-center mt-4">
+          <div className="flex space-x-2 items-center justify-ends">
+            {/* Prev Button */}
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasPrev && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/left.png" alt="" />
+            </button>
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchData(page)}
+                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+                    ${
+                      page === pagination.currentPage
+                        ? "bg-yellow-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasNext && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/right.png" alt="" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ToastContainer
@@ -806,10 +868,57 @@ const Jobs = () => {
   );
 };
 
+const CoordinatesDetail = ({ coordinates }) => {
+  const [address, setAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (
+      coordinates?.coordinates &&
+      coordinates.coordinates.length === 2 &&
+      window.google
+    ) {
+      setLoading(true);
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: coordinates.coordinates[1],
+        lng: coordinates.coordinates[0],
+      };
+
+      geocoder.geocode({ location: latLng }, (results, status) => {
+        setLoading(false);
+        if (status === "OK" && results[0]) {
+          setAddress(results[0].formatted_address);
+        }
+      });
+    }
+  }, [coordinates]);
+
+  return (
+    <div className="col-span-full mb-4">
+      <div className="text-sm font-medium text-gray-700 mb-1">
+        Location Details
+      </div>
+      <div className="bg-gray-50 p-3 rounded-md">
+        {loading ? (
+          <div className="text-gray-500 italic">Loading address...</div>
+        ) : address ? (
+          <div>
+            <span className="font-medium">Address:</span> {address}
+          </div>
+        ) : (
+          <div className="text-gray-500 italic">
+            Could not determine address
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const DetailItem = ({ label, value }) => {
-  const displayValue = typeof value === 'object' 
-    ? JSON.stringify(value) 
-    : value;
+  const displayValue =
+    typeof value === "object" ? JSON.stringify(value) : value;
 
   return (
     <div className="mb-2">

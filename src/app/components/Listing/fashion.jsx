@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getData, postData, updateListData, deleteData } from "@/app/API/method";
+import {
+  getData,
+  postData,
+  updateListData,
+  deleteData,
+} from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 
@@ -38,12 +43,12 @@ const Fashion = () => {
     } else {
       setMapLoaded(true);
     }
-    
+
     fetchData();
-    
+
     return () => {
       // Clean up image preview URLs
-      imagePreviews.forEach(preview => {
+      imagePreviews.forEach((preview) => {
         if (preview.isNew) {
           URL.revokeObjectURL(preview.preview);
         }
@@ -56,7 +61,7 @@ const Fashion = () => {
     try {
       setLoading(true);
       const response = await getData(`/listing/paginate/fashion?page=${page}`);
-      
+
       if (response?.data) {
         setData(
           response.data.results.map((item) => ({
@@ -97,12 +102,12 @@ const Fashion = () => {
   // Reverse geocode coordinates to address
   const reverseGeocode = async (coordinates) => {
     if (!mapLoaded || !window.google) return;
-    
+
     try {
       const geocoder = new window.google.maps.Geocoder();
       const latLng = {
         lat: coordinates[1],
-        lng: coordinates[0]
+        lng: coordinates[0],
       };
 
       return new Promise((resolve) => {
@@ -124,14 +129,15 @@ const Fashion = () => {
   const handleEditClick = async (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
-    
+
     // Parse coordinates
     let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
     try {
       if (originalData.listing_coordinates) {
-        coordinates = typeof originalData.listing_coordinates === 'string' 
-          ? JSON.parse(originalData.listing_coordinates) 
-          : originalData.listing_coordinates;
+        coordinates =
+          typeof originalData.listing_coordinates === "string"
+            ? JSON.parse(originalData.listing_coordinates)
+            : originalData.listing_coordinates;
       }
     } catch (e) {
       console.error("Error parsing coordinates:", e);
@@ -155,9 +161,9 @@ const Fashion = () => {
       donation: originalData?.donation || "NO",
       from_business: originalData?.from_business || "false",
       location: address,
-      listing_coordinates: JSON.stringify(coordinates)
+      listing_coordinates: JSON.stringify(coordinates),
     });
-    
+
     // Handle image previews
     if (originalData.pictures && originalData.pictures.length > 0) {
       setImagePreviews(
@@ -169,7 +175,7 @@ const Fashion = () => {
     } else {
       setImagePreviews([]);
     }
-    
+
     setIsEditModalOpen(true);
 
     // Initialize Google Maps autocomplete after a slight delay
@@ -177,31 +183,34 @@ const Fashion = () => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
         if (input) {
-          const autocomplete = new window.google.maps.places.Autocomplete(input, {
-            types: ["geocode"],
-          });
+          const autocomplete = new window.google.maps.places.Autocomplete(
+            input,
+            {
+              types: ["geocode"],
+            }
+          );
           setAutocomplete(autocomplete);
-          
+
           autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
             if (!place.geometry) {
               toast.warning("No details available for this location");
               return;
             }
-            
+
             const location = place.formatted_address;
             const coordinates = {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             };
-            
-            setFormData(prev => ({
+
+            setFormData((prev) => ({
               ...prev,
               location,
               listing_coordinates: JSON.stringify({
                 type: "Point",
-                coordinates: [coordinates.lng, coordinates.lat]
-              })
+                coordinates: [coordinates.lng, coordinates.lat],
+              }),
             }));
           });
         }
@@ -241,53 +250,55 @@ const Fashion = () => {
   // Form handlers
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const isValidImage = (file) => {
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+
     if (!validTypes.includes(file.type)) {
       toast.error(`Invalid file type: ${file.type}`);
       return false;
     }
-    
+
     if (file.size > MAX_SIZE) {
-      toast.error(`File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`);
+      toast.error(
+        `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (max 5MB)`
+      );
       return false;
     }
-    
+
     return true;
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const MAX_IMAGES = 10;
-    
+
     if (files.length + imagePreviews.length > MAX_IMAGES) {
       toast.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
-    
-    const validFiles = files.filter(file => isValidImage(file));
-    
+
+    const validFiles = files.filter((file) => isValidImage(file));
+
     if (validFiles.length > 0) {
-      const newImagePreviews = validFiles.map(file => ({
+      const newImagePreviews = validFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
-        isNew: true
+        isNew: true,
       }));
-      
-      setImagePreviews(prev => [...prev, ...newImagePreviews]);
+
+      setImagePreviews((prev) => [...prev, ...newImagePreviews]);
     }
   };
 
   const removeImage = (index) => {
-    setImagePreviews(prev => {
+    setImagePreviews((prev) => {
       const newPreviews = [...prev];
       if (newPreviews[index].isNew) {
         URL.revokeObjectURL(newPreviews[index].preview);
@@ -301,11 +312,11 @@ const Fashion = () => {
   const handleUpdateListing = async (e) => {
     e.preventDefault();
     if (!selectedCard) return;
-    
+
     try {
       setIsUpdating(true);
       const listingId = selectedCard.originalData?.id || selectedCard.id;
-      
+
       if (!listingId) {
         toast.error("Invalid listing ID");
         return;
@@ -314,27 +325,34 @@ const Fashion = () => {
       const form = new FormData();
 
       // Append all form data
-      form.append("category", formData.category || 'Fashion');
-      form.append("subcategory", formData.subcategory || 'Jewelry');
-      form.append("title", formData.title || '');
-      form.append("description", formData.description || '');
-      form.append("location", formData.location || '');
-      form.append("material_type", formData.material_type || '');
-      form.append("color", formData.color || '');
-      form.append("condition", formData.condition || 'NEW');
+      form.append("category", formData.category || "Fashion");
+      form.append("subcategory", formData.subcategory || "Jewelry");
+      form.append("title", formData.title || "");
+      form.append("description", formData.description || "");
+      form.append("location", formData.location || "");
+      form.append("material_type", formData.material_type || "");
+      form.append("color", formData.color || "");
+      form.append("condition", formData.condition || "NEW");
       form.append("price", String(formData.price || 0));
-      form.append("negotiable", formData.negotiable || 'NO');
-      form.append("donation", formData.donation || 'NO');
-      form.append("size", formData.size || '');
-      form.append("brand", formData.brand || '');
-      form.append("from_business", formData.from_business || 'false');
-      form.append("listing_coordinates", formData.listing_coordinates || '{"type":"Point","coordinates":[31.4494997,74.284469]}');
-      
+      form.append("negotiable", formData.negotiable || "NO");
+      form.append("donation", formData.donation || "NO");
+      form.append("size", formData.size || "");
+      form.append("brand", formData.brand || "");
+      form.append("from_business", formData.from_business || "false");
+      form.append(
+        "listing_coordinates",
+        formData.listing_coordinates ||
+          '{"type":"Point","coordinates":[31.4494997,74.284469]}'
+      );
+
       // Handle keywords
       if (formData.keywords) {
-        form.append("keywords", Array.isArray(formData.keywords) 
-          ? formData.keywords.join(',') 
-          : formData.keywords);
+        form.append(
+          "keywords",
+          Array.isArray(formData.keywords)
+            ? formData.keywords.join(",")
+            : formData.keywords
+        );
       }
 
       // Handle images
@@ -346,28 +364,25 @@ const Fashion = () => {
         }
       });
 
-      await updateListData(
-        `/admin-panel/fashion/${listingId}`,
-        form
-      );
-      
+      await updateListData(`/admin-panel/fashion/${listingId}`, form);
+
       toast.success("Fashion listing updated successfully!");
       await fetchData(pagination.currentPage);
       handleCloseEditModal();
     } catch (error) {
       console.error("Error updating listing:", error);
       let errorMsg = "Failed to update fashion listing";
-      
+
       if (error.response) {
         if (error.response.status === 404) {
           errorMsg = "Resource not found (404) - please check the endpoint";
         } else if (error.response.data?.message) {
           errorMsg = error.response.data.message;
         } else if (error.response.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).join(', ');
+          errorMsg = Object.values(error.response.data.errors).join(", ");
         }
       }
-      
+
       toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
@@ -377,12 +392,12 @@ const Fashion = () => {
   const handleDeleteListing = async () => {
     const listingData = selectedCard?.originalData || selectedCard;
     if (!listingData) return;
-    
+
     try {
       setIsDeleting(true);
       const form = new FormData();
-      form.append('listing_id', listingData.id || '');
-      form.append('category', 'Fashion');
+      form.append("listing_id", listingData.id || "");
+      form.append("category", "Fashion");
 
       await deleteData("/admin-panel/delete", form);
 
@@ -391,7 +406,9 @@ const Fashion = () => {
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error(error.response?.data?.message || "Failed to delete fashion listing");
+      toast.error(
+        error.response?.data?.message || "Failed to delete fashion listing"
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -399,49 +416,64 @@ const Fashion = () => {
 
   // Form fields configuration
   const formFields = [
-    { name: 'title', label: 'Title', type: 'text', required: true },
-    { name: 'description', label: 'Description', type: 'textarea', required: true },
-    { name: 'price', label: 'Price', type: 'number', required: true },
-    { 
-      name: 'negotiable', 
-      label: 'Negotiable', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
+    { name: "title", label: "Title", type: "text", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
     },
-    { 
-      name: 'condition', 
-      label: 'Condition', 
-      type: 'select', 
-      options: ['NEW', 'USED', 'REFURBISHED'],
-      required: true 
+    { name: "price", label: "Price", type: "number", required: true },
+    {
+      name: "negotiable",
+      label: "Negotiable",
+      type: "select",
+      options: ["YES", "NO"],
+      required: true,
     },
-    { name: 'color', label: 'Color', type: 'text', required: true },
-    { name: 'material_type', label: 'Material Type', type: 'text', required: true },
-    { name: 'size', label: 'Size', type: 'text', required: true },
-    { name: 'brand', label: 'Brand', type: 'text', required: true },
-    { 
-      name: 'subcategory', 
-      label: 'Subcategory', 
-      type: 'select',
-      options: ['Jewelry', 'Clothing', 'Accessories', 'Footwear', 'Watches'],
-      required: true 
+    {
+      name: "condition",
+      label: "Condition",
+      type: "select",
+      options: ["NEW", "USED", "REFURBISHED"],
+      required: true,
     },
-    { 
-      name: 'donation', 
-      label: 'Donation', 
-      type: 'select', 
-      options: ['YES', 'NO'],
-      required: true 
+    { name: "color", label: "Color", type: "text", required: true },
+    {
+      name: "material_type",
+      label: "Material Type",
+      type: "text",
+      required: true,
     },
-    { 
-      name: 'from_business', 
-      label: 'From Business', 
-      type: 'select', 
-      options: ['true', 'false'],
-      required: true 
+    { name: "size", label: "Size", type: "text", required: true },
+    { name: "brand", label: "Brand", type: "text", required: true },
+    {
+      name: "subcategory",
+      label: "Subcategory",
+      type: "select",
+      options: ["Jewelry", "Clothing", "Accessories", "Footwear", "Watches"],
+      required: true,
     },
-    { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false }
+    {
+      name: "donation",
+      label: "Donation",
+      type: "select",
+      options: ["YES", "NO"],
+      required: true,
+    },
+    {
+      name: "from_business",
+      label: "From Business",
+      type: "select",
+      options: ["true", "false"],
+      required: true,
+    },
+    {
+      name: "keywords",
+      label: "Keywords (comma separated)",
+      type: "text",
+      required: false,
+    },
   ];
 
   if (loading) {
@@ -455,9 +487,6 @@ const Fashion = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-      
-
         {/* Fashion Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
@@ -477,7 +506,6 @@ const Fashion = () => {
             />
           ))}
         </div>
-
         {/* Detail Modal */}
         {isDetailModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -506,7 +534,10 @@ const Fashion = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedCard?.material_type && (
-                      <DetailItem label="Material Type" value={selectedCard.material_type} />
+                      <DetailItem
+                        label="Material Type"
+                        value={selectedCard.material_type}
+                      />
                     )}
                     {selectedCard?.color && (
                       <DetailItem label="Color" value={selectedCard.color} />
@@ -518,30 +549,47 @@ const Fashion = () => {
                       <DetailItem label="Brand" value={selectedCard.brand} />
                     )}
                     {selectedCard?.condition && (
-                      <DetailItem label="Condition" value={selectedCard.condition} />
+                      <DetailItem
+                        label="Condition"
+                        value={selectedCard.condition}
+                      />
                     )}
                     {selectedCard?.negotiable && (
-                      <DetailItem label="Negotiable" value={selectedCard.negotiable} />
+                      <DetailItem
+                        label="Negotiable"
+                        value={selectedCard.negotiable}
+                      />
                     )}
                     {selectedCard?.donation && (
-                      <DetailItem label="Donation" value={selectedCard.donation} />
+                      <DetailItem
+                        label="Donation"
+                        value={selectedCard.donation}
+                      />
                     )}
                     {selectedCard?.location && (
-                      <DetailItem label="Location" value={selectedCard.location} />
+                      <DetailItem
+                        label="Location"
+                        value={selectedCard.location}
+                      />
                     )}
                     {selectedCard?.subcategory && (
-                      <DetailItem label="Subcategory" value={selectedCard.subcategory} />
+                      <DetailItem
+                        label="Subcategory"
+                        value={selectedCard.subcategory}
+                      />
                     )}
                     {selectedCard?.from_business && (
-                      <DetailItem label="From Business" value={selectedCard.from_business} />
+                      <DetailItem
+                        label="From Business"
+                        value={selectedCard.from_business}
+                      />
                     )}
                     {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
-                          typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
+                      <CoordinatesDetail
+                        coordinates={
+                          typeof selectedCard.listing_coordinates === "string"
+                            ? JSON.parse(selectedCard.listing_coordinates)
+                            : selectedCard.listing_coordinates
                         }
                       />
                     )}
@@ -567,7 +615,6 @@ const Fashion = () => {
             </div>
           </div>
         )}
-
         {/* Delete Modal */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -584,7 +631,8 @@ const Fashion = () => {
 
               <div className="p-6">
                 <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this fashion listing? This action cannot be undone.
+                  Are you sure you want to delete this fashion listing? This
+                  action cannot be undone.
                 </p>
 
                 <div className="flex justify-end space-x-3">
@@ -626,14 +674,15 @@ const Fashion = () => {
                         </svg>
                         Deleting...
                       </>
-                    ) : 'Delete'}
+                    ) : (
+                      "Delete"
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {/* Edit Modal */}
         {isEditModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -709,7 +758,9 @@ const Fashion = () => {
                     <div key={field.name} className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </label>
 
                       {field.type === "select" ? (
@@ -778,7 +829,11 @@ const Fashion = () => {
                       </label>
                       <div className="p-2 bg-gray-100 rounded-md">
                         <pre className="text-xs break-all">
-                          {JSON.stringify(JSON.parse(formData.listing_coordinates), null, 2)}
+                          {JSON.stringify(
+                            JSON.parse(formData.listing_coordinates),
+                            null,
+                            2
+                          )}
                         </pre>
                       </div>
                     </div>
@@ -832,24 +887,52 @@ const Fashion = () => {
             </div>
           </div>
         )}
-          <div className="flex justify-between items-end">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
+        <div className="flex justify-end items-center mt-4">
+          <div className="flex space-x-2 items-center justify-end">
+            {/* Prev Button */}
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasPrev && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/left.png" alt="Previous" />
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchData(page)}
+                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+            ${
+              page === pagination.currentPage
+                ? "bg-yellow-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+
+            {/* Next Button */}
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasNext && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/right.png" alt="Next" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -868,10 +951,57 @@ const Fashion = () => {
   );
 };
 
+const CoordinatesDetail = ({ coordinates }) => {
+  const [address, setAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (
+      coordinates?.coordinates &&
+      coordinates.coordinates.length === 2 &&
+      window.google
+    ) {
+      setLoading(true);
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: coordinates.coordinates[1],
+        lng: coordinates.coordinates[0],
+      };
+
+      geocoder.geocode({ location: latLng }, (results, status) => {
+        setLoading(false);
+        if (status === "OK" && results[0]) {
+          setAddress(results[0].formatted_address);
+        }
+      });
+    }
+  }, [coordinates]);
+
+  return (
+    <div className="col-span-full mb-4">
+      <div className="text-sm font-medium text-gray-700 mb-1">
+        Location Details
+      </div>
+      <div className="bg-gray-50 p-3 rounded-md">
+        {loading ? (
+          <div className="text-gray-500 italic">Loading address...</div>
+        ) : address ? (
+          <div>
+            <span className="font-medium">Address:</span> {address}
+          </div>
+        ) : (
+          <div className="text-gray-500 italic">
+            Could not determine address
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const DetailItem = ({ label, value }) => {
-  const displayValue = typeof value === 'object' 
-    ? JSON.stringify(value) 
-    : value;
+  const displayValue =
+    typeof value === "object" ? JSON.stringify(value) : value;
 
   return (
     <div className="mb-2">

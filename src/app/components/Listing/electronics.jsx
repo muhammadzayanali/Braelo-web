@@ -50,12 +50,12 @@ const Electronics = () => {
     };
   }, []);
 
-  // Fetch data with pagination
+  // Fetch data with pagination - Updated with pagination logic from Jobs.jsx
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
       const response = await getData(`/listing/paginate/electronics?page=${page}`);
-      
+
       if (response?.data) {
         setData(
           response.data.results.map((item) => ({
@@ -93,7 +93,7 @@ const Electronics = () => {
     }
   };
 
-  // Reverse geocode coordinates to address
+  // Reverse geocode coordinates to address - Taken from Jobs.jsx
   const reverseGeocode = async (coordinates) => {
     if (!mapLoaded || !window.google) return;
     
@@ -119,12 +119,12 @@ const Electronics = () => {
     }
   };
 
-  // Handle edit click
+  // Handle edit click - Updated with coordinates handling from Jobs.jsx
   const handleEditClick = async (card) => {
     setSelectedCard(card);
     const originalData = card.originalData || {};
     
-    // Parse coordinates
+    // Parse coordinates - Taken from Jobs.jsx
     let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
     try {
       if (originalData.listing_coordinates) {
@@ -136,7 +136,7 @@ const Electronics = () => {
       console.error("Error parsing coordinates:", e);
     }
 
-    // Get address from coordinates
+    // Get address from coordinates - Taken from Jobs.jsx
     let address = originalData.location || "";
     if (coordinates.coordinates && coordinates.coordinates.length === 2) {
       const geocodedAddress = await reverseGeocode(coordinates.coordinates);
@@ -173,7 +173,7 @@ const Electronics = () => {
     
     setIsEditModalOpen(true);
 
-    // Initialize Google Maps autocomplete after a slight delay
+    // Initialize Google Maps autocomplete after a slight delay - Taken from Jobs.jsx
     setTimeout(() => {
       if (mapLoaded && typeof window.google !== "undefined") {
         const input = document.getElementById("location-autocomplete");
@@ -210,7 +210,7 @@ const Electronics = () => {
     }, 500);
   };
 
-  // Modal handlers
+  // Modal handlers (remain the same)
   const handleOpenDetail = (card) => {
     setSelectedCard(card.originalData || card);
     setIsDetailModalOpen(true);
@@ -239,7 +239,7 @@ const Electronics = () => {
     setSelectedCard(null);
   };
 
-  // Form handlers
+  // Form handlers (remain the same)
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ 
@@ -298,7 +298,7 @@ const Electronics = () => {
     });
   };
 
-  // API operations
+  // API operations (remain the same)
   const handleUpdateListing = async (e) => {
     e.preventDefault();
     if (!selectedCard) return;
@@ -394,7 +394,7 @@ const Electronics = () => {
     }
   };
 
-  // Form fields configuration
+  // Form fields configuration (remain the same)
   const formFields = [
     { name: 'title', label: 'Title', type: 'text', required: true },
     { name: 'description', label: 'Description', type: 'textarea', required: true },
@@ -440,6 +440,55 @@ const Electronics = () => {
     { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: false }
   ];
 
+  // New CoordinatesDetail component from Jobs.jsx
+  const CoordinatesDetail = ({ coordinates }) => {
+    const [address, setAddress] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+      if (
+        coordinates?.coordinates &&
+        coordinates.coordinates.length === 2 &&
+        window.google
+      ) {
+        setLoading(true);
+        const geocoder = new window.google.maps.Geocoder();
+        const latLng = {
+          lat: coordinates.coordinates[1],
+          lng: coordinates.coordinates[0],
+        };
+
+        geocoder.geocode({ location: latLng }, (results, status) => {
+          setLoading(false);
+          if (status === "OK" && results[0]) {
+            setAddress(results[0].formatted_address);
+          }
+        });
+      }
+    }, [coordinates]);
+
+    return (
+      <div className="col-span-full mb-4">
+        <div className="text-sm font-medium text-gray-700 mb-1">
+          Location Details
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          {loading ? (
+            <div className="text-gray-500 italic">Loading address...</div>
+          ) : address ? (
+            <div>
+              <span className="font-medium">Address:</span> {address}
+            </div>
+          ) : (
+            <div className="text-gray-500 italic">
+              Could not determine address
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -451,29 +500,8 @@ const Electronics = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
-
         {/* Electronics Listings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {data.map((card, index) => (
             <ListingCard
               key={index}
@@ -492,7 +520,7 @@ const Electronics = () => {
           ))}
         </div>
 
-        {/* Detail Modal */}
+        {/* Detail Modal - Updated with CoordinatesDetail */}
         {isDetailModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -547,12 +575,11 @@ const Electronics = () => {
                       <DetailItem label="From Business" value={selectedCard.from_business} />
                     )}
                     {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
-                          typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
+                      <CoordinatesDetail
+                        coordinates={
+                          typeof selectedCard.listing_coordinates === "string"
+                            ? JSON.parse(selectedCard.listing_coordinates)
+                            : selectedCard.listing_coordinates
                         }
                       />
                     )}
@@ -579,7 +606,7 @@ const Electronics = () => {
           </div>
         )}
 
-        {/* Delete Modal */}
+        {/* Delete Modal (remain the same) */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -619,7 +646,7 @@ const Electronics = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
+        {/* Edit Modal (remain the same) */}
         {isEditModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -817,6 +844,49 @@ const Electronics = () => {
             </div>
           </div>
         )}
+         <div className="flex justify-end items-center mt-4">
+          <div className="flex space-x-2 items-center justify-ends">
+            {/* Prev Button */}
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasPrev && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/left.png" alt="" />
+            </button>
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchData(page)}
+                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+                    ${
+                      page === pagination.currentPage
+                        ? "bg-yellow-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasNext && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/right.png" alt="" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ToastContainer

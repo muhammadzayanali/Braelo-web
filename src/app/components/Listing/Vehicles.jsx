@@ -504,7 +504,7 @@ const Vehicles = () => {
 
         {/* Detail Modal */}
         {isDetailModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px] z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Vehicle Details</h2>
@@ -512,7 +512,7 @@ const Vehicles = () => {
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -593,7 +593,7 @@ const Vehicles = () => {
 
         {/* Delete Modal */}
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px] z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Delete Vehicle</h2>
@@ -601,7 +601,7 @@ const Vehicles = () => {
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -634,7 +634,7 @@ const Vehicles = () => {
 
         {/* Edit Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px] z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Edit Vehicle Listing</h2>
@@ -779,7 +779,7 @@ const Vehicles = () => {
                   </div>
 
                   {/* Display Coordinates */}
-                  {formData.listing_coordinates && (
+                  {/* {formData.listing_coordinates && (
                     <div className="mb-4 col-span-full">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Coordinates
@@ -794,7 +794,7 @@ const Vehicles = () => {
                         </pre>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6 border-t pt-4">
@@ -848,7 +848,7 @@ const Vehicles = () => {
           <div className="flex space-x-2 items-center justify-ends">
             {/* Prev Button */}
             <button
-              onClick={() => fetchNotifications(pagination.currentPage - 1)}
+              onClick={() => fetchData(pagination.currentPage - 1)}
               disabled={!pagination.hasPrev || loading}
               className={`p-3 rounded-md ${
                 pagination.hasPrev && !loading
@@ -862,7 +862,7 @@ const Vehicles = () => {
               (page) => (
                 <button
                   key={page}
-                  onClick={() => fetchNotifications(page)}
+                  onClick={() => fetchData(page)}
                   className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
                     ${
                       page === pagination.currentPage

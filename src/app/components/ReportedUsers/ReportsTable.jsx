@@ -156,10 +156,10 @@ export default function ReportsTable() {
         onChange={(e) => handleAction(rowData.id, e.target.value)}
         className="border rounded-md p-1"
       >
-        <option value="">Actions</option>
+        {/* <option value="">Actions</option> */}
         <option value="view">View Detail</option>
-        <option value="delete">Delete</option>
-        <option value="response">Response</option>
+        {/* <option value="delete">Delete</option>
+        <option value="response">Response</option> */}
       </select>
     );
   };

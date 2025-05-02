@@ -100,8 +100,8 @@ const Events = () => {
     try {
       const geocoder = new window.google.maps.Geocoder();
       const latLng = {
-        lat: coordinates[1],
-        lng: coordinates[0],
+        lat: coordinates[0],
+        lng: coordinates[1],
       };
 
       return new Promise((resolve) => {
@@ -125,7 +125,7 @@ const Events = () => {
     const originalData = card.originalData || {};
 
     // Parse coordinates
-    let coordinates = { type: "Point", coordinates: [74.284469, 31.4494997] };
+    let coordinates = { type: "Point", coordinates: [31.4494997,74.284469] };
     try {
       if (originalData.listing_coordinates) {
         coordinates =

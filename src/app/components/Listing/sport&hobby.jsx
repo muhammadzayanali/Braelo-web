@@ -455,27 +455,6 @@ const Sports = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => fetchData(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasPrev && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => fetchData(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className={`px-4 py-2 rounded-md ${pagination.hasNext && !loading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            Next
-          </button>
-        </div>
-
         {/* Sports Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((card, index) => (
@@ -554,12 +533,11 @@ const Sports = () => {
                       <DetailItem label="From Business" value={selectedCard.from_business} />
                     )}
                     {selectedCard?.listing_coordinates && (
-                      <DetailItem
-                        label="Coordinates"
-                        value={
+                      <CoordinatesDetail
+                        coordinates={
                           typeof selectedCard.listing_coordinates === 'string'
-                            ? selectedCard.listing_coordinates
-                            : JSON.stringify(selectedCard.listing_coordinates)
+                            ? JSON.parse(selectedCard.listing_coordinates)
+                            : selectedCard.listing_coordinates
                         }
                       />
                     )}
@@ -850,6 +828,50 @@ const Sports = () => {
             </div>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex justify-end items-center mt-4">
+          <div className="flex space-x-2 items-center justify-end">
+            <button
+              onClick={() => fetchData(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasPrev && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/left.png" alt="" />
+            </button>
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchData(page)}
+                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors
+                    ${
+                      page === pagination.currentPage
+                        ? "bg-yellow-600 text-white"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => fetchData(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext || loading}
+              className={`p-3 rounded-md ${
+                pagination.hasNext && !loading
+                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <img src="/right.png" alt="" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ToastContainer
@@ -864,6 +886,54 @@ const Sports = () => {
         pauseOnHover
       />
     </>
+  );
+};
+
+const CoordinatesDetail = ({ coordinates }) => {
+  const [address, setAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (
+      coordinates?.coordinates &&
+      coordinates.coordinates.length === 2 &&
+      window.google
+    ) {
+      setLoading(true);
+      const geocoder = new window.google.maps.Geocoder();
+      const latLng = {
+        lat: coordinates.coordinates[1],
+        lng: coordinates.coordinates[0],
+      };
+
+      geocoder.geocode({ location: latLng }, (results, status) => {
+        setLoading(false);
+        if (status === "OK" && results[0]) {
+          setAddress(results[0].formatted_address);
+        }
+      });
+    }
+  }, [coordinates]);
+
+  return (
+    <div className="col-span-full mb-4">
+      <div className="text-sm font-medium text-gray-700 mb-1">
+        Location Details
+      </div>
+      <div className="bg-gray-50 p-3 rounded-md">
+        {loading ? (
+          <div className="text-gray-500 italic">Loading address...</div>
+        ) : address ? (
+          <div>
+            <span className="font-medium">Address:</span> {address}
+          </div>
+        ) : (
+          <div className="text-gray-500 italic">
+            Could not determine address
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
