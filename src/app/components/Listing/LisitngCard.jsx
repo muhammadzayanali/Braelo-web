@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { className} from "primereact/utils";
 
 const ListingCard = ({
   image,
@@ -17,8 +18,13 @@ const ListingCard = ({
       <div className="relative h-72 w-full rounded-xl overflow-hidden">
         <img
           src={image}
-          alt={title}
-          className="w-full h-full object-cover"
+          className="flex items-center justify-center"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/b6.png";
+            
+          }}
+          alt="Card Image"
         />
       </div>
 
@@ -40,22 +46,26 @@ const ListingCard = ({
       {/* Text Section */}
       <div className="pt-2 flex-grow flex flex-col">
         <div className="flex justify-between items-center">
-          <h2 className="text-[16px] font-[500] text-[#78828A] truncate">{title}</h2>
+          <h2 className="text-[16px] font-[500] text-[#78828A] truncate">
+            {title}
+          </h2>
           {toggle && <div>{toggle}</div>}
         </div>
-        
+
         {/* Conditionally render price or salary */}
         {price && (
           <p className="text-[#78828A] text-[18px] font-[700] mt-2">{price}</p>
         )}
         {salary && (
-          <p className="text-[#78828A] text-[18px] font-[700] mt-2">{salary}/mo</p>
+          <p className="text-[#78828A] text-[18px] font-[700] mt-2">
+            {salary}/mo
+          </p>
         )}
-        
+
         <p className="text-[#78828A] text-[12px] font-[500] mt-2 line-clamp-3">
           {description}
         </p>
-        
+
         {/* Stats Section at the bottom */}
         {/* <div className="flex gap-2 mt-auto pt-3">
           <div className="flex items-center">

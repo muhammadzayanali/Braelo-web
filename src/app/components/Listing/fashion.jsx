@@ -508,7 +508,7 @@ const Fashion = () => {
         </div>
         {/* Detail Modal */}
         {isDetailModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px] z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Fashion Details</h2>
@@ -516,7 +516,7 @@ const Fashion = () => {
                   onClick={handleCloseDetailModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -617,7 +617,7 @@ const Fashion = () => {
         )}
         {/* Delete Modal */}
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px]  z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Delete Fashion Item</h2>
@@ -625,7 +625,7 @@ const Fashion = () => {
                   onClick={handleCloseDeleteModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -685,7 +685,7 @@ const Fashion = () => {
         )}
         {/* Edit Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed -inset-[250px]  z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b p-4">
                 <h2 className="text-xl font-semibold">Edit Fashion Listing</h2>
@@ -694,7 +694,7 @@ const Fashion = () => {
                   className="text-gray-500 hover:text-gray-700"
                   disabled={isUpdating}
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -717,7 +717,7 @@ const Fashion = () => {
                           onClick={() => removeImage(index)}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          ×
+                          ✕
                         </button>
                       </div>
                     ))}

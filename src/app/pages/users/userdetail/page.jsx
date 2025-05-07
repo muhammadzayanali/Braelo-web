@@ -10,11 +10,13 @@ import BackButton from "@/app/components/BackButton";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { jsPDF } from "jspdf";
+import * as XLSX from "xlsx";
 
 const Userdetail = () => {
-  // const searchParams = useSearchParams();
-  // const router = useRouter();
-  // const userId = searchParams.get('id');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const userId = searchParams.get('id');
 
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,7 @@ const Userdetail = () => {
     const storedData = sessionStorage.getItem("currentUserData");
     if (storedData) {
       setUserData(JSON.parse(storedData));
+      setLoading(false);
     }
   }, []);
 
@@ -54,16 +57,92 @@ const Userdetail = () => {
     setIsDropdownOpen(false);
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="p-5">
-  //       <div className="flex justify-between">
-  //         <BackButton buttonStyle="bg-gray-300" iconStyle="text-gray-700" />
-  //         <div className="animate-pulse">Loading user data...</div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const downloadAsPDF = () => {
+    if (!userData) {
+      toast.error("No user data available to download");
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text(`User Details - ${userData.username || 'User'}`, 14, 20);
+    
+    // User details
+    doc.setFontSize(12);
+    let yPosition = 40;
+    
+    // Basic Info
+    doc.text(`Name: ${userData.name || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Username: ${userData.username || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Email: ${userData.email || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Phone: ${userData.phone_number || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Status: ${userData.is_active ? 'Active' : 'Inactive'}`, 10, yPosition);
+    yPosition += 15;
+    
+    // Additional Info
+    doc.text(`Created At: ${new Date(userData.created_at).toLocaleString() || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Last Updated: ${new Date(userData.updated_at).toLocaleString() || 'N/A'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Role: ${userData.is_superuser ? 'Admin' : 'Client'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Email Verified: ${userData.is_email_verified ? 'Yes' : 'No'}`, 10, yPosition);
+    yPosition += 10;
+    doc.text(`Phone Verified: ${userData.is_phone_verified ? 'Yes' : 'No'}`, 10, yPosition);
+    
+    doc.save(`user_details_${userData.username || 'user'}.pdf`);
+    setIsDropdownOpen(false);
+    toast.success("PDF downloaded successfully!");
+  };
+
+  const downloadAsCSV = () => {
+    if (!userData) {
+      toast.error("No user data available to download");
+      return;
+    }
+    
+    const worksheet = XLSX.utils.json_to_sheet([
+      {
+        "Name": userData.name || 'N/A',
+        "Username": userData.username || 'N/A',
+        "Email": userData.email || 'N/A',
+        "Phone Number": userData.phone_number || 'N/A',
+        "Account Status": userData.is_active ? 'Active' : 'Inactive',
+        "Email Verified": userData.is_email_verified ? 'Yes' : 'No',
+        "Phone Verified": userData.is_phone_verified ? 'Yes' : 'No',
+        "Role": userData.is_superuser ? 'Admin' : 'Client',
+        "Created At": new Date(userData.created_at).toLocaleString() || 'N/A',
+        "Last Updated": new Date(userData.updated_at).toLocaleString() || 'N/A',
+        "Deleted At": userData.deleted_at ? new Date(userData.deleted_at).toLocaleString() : 'N/A',
+        "Device Token": userData.device_token || 'N/A',
+        "OTP": userData.otp || 'N/A',
+        "OTP Created At": userData.otp_created_at || 'N/A'
+      }
+    ]);
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "User Details");
+    XLSX.writeFile(workbook, `user_details_${userData.username || 'user'}.csv`);
+    setIsDropdownOpen(false);
+    toast.success("CSV downloaded successfully!");
+  };
+
+  if (loading) {
+    return (
+      <div className="p-5">
+        <div className="flex justify-between">
+          <BackButton buttonStyle="bg-gray-300" iconStyle="text-gray-700" />
+          <div className="animate-pulse">Loading user data...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -109,7 +188,7 @@ const Userdetail = () => {
             <div className="relative">
               <div
                 onClick={toggleDropdown}
-                className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm pl-10 pr-2 py-2 cursor-pointer focus:outline-none"
+                className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm pl-10 pr-2 py-2 cursor-pointer focus:outline-none hover:bg-gray-50"
               >
                 <Image
                   src="/images/export.png"
@@ -121,10 +200,40 @@ const Userdetail = () => {
                 <span className="text-[#75818D] text-[14px] font-plus font-[400]">
                   Download
                 </span>
+                <svg
+                  className={`w-4 h-4 ml-2 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
-              {/* {isDropdownOpen && (
-                <UserDropdown onActionSelect={handleActionSelect} />
-              )} */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        downloadAsPDF();
+                        handleActionSelect('pdf');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      Download as PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        downloadAsCSV();
+                        handleActionSelect('csv');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      Download as CSV
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -138,30 +247,25 @@ const Userdetail = () => {
             </h1>
           </div>
           <div className="flex gap-2">
-            <Image
-              src="/b2.png"
+            <button className="flex items-center gap-2 bg-[#CD9403] text-white p-2 rounded-md cursor-pointer hover:bg-[#b37f02]"
+            onClick={() => setModalOpen(true)}
+            >
+            <img
+              src="/a7.png"
               alt="button1"
               className="cursor-pointer"
-              onClick={() => setModalOpen(true)}
-              width={50}
-              height={25}
             />
-            <Image
-              src="/b1.png"
+            Chat
+            </button>
+            <button className="flex items-center gap-2 bg-[#CD9403] text-white p-2 rounded-md cursor-pointer hover:bg-[#b37f02]" 
+            onClick={OpeModal}>
+            <img
+              src="/a17.png"
               alt="button2"
               className="cursor-pointer"
-              onClick={OpeModal}
-              width={50}
-              height={25}
             />
-            <Image
-              src="/b3.png"
-              alt="button3"
-              className="cursor-pointer"
-              onClick={toggleDropdown}
-              width={25}
-              height={25}
-            />
+            Edit
+            </button>
           </div>
           <ChatModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
           <EditUserdetailModal
@@ -279,7 +383,7 @@ const Userdetail = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
             <h2 className="text-xl font-semibold mb-4">
-              Start Chat with Business
+              Start Chat with User
             </h2>
             <p className="mb-4">
               Click below to send an email to:{" "}

@@ -11,14 +11,14 @@ const Layout = ({ children }) => {
 
   return (
     <div className="admin-panel">
-      <div className="flex h-screen">
+      <div className="flex h-screen z-10">
         <div className="">
           <Sidebar />
         </div>
 
-        <div className="  w-[calc(100%-256px)] h-full flex flex-col border rounded-l-[50px] bg-white">
+        <div className="  w-[calc(100%-256px)] h-full flex flex-col border rounded-tl-[50px] bg-white z-50">
           <NavBar />
-          <div className="p-5 overflow-y-auto">{children}</div>
+          <div className="p-5 overflow-y-auto border rounded-bl-[50px]">{children}</div>
         </div>
       </div>
     </div>

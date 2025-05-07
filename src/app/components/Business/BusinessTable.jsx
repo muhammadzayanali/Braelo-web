@@ -1,30 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { getHeaderStyle } from "../Users/UserData";
-import { getBodyStyle } from "../Users/UserData";
-import Link from "next/link";
+import { getHeaderStyle, getBodyStyle } from "../Users/UserData";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getData, postData } from "@/app/API/method";
+import { postData } from "@/app/API/method";
 
-export default function BussniessTable() {
-  const [data, setData] = useState([]);
-  const [selectedData, setSelectedData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [first, setFirst] = useState(0);
-  const [rows, setRows] = useState(10);
+const BusinessTable = ({ 
+  data, 
+  loading, 
+  selectedBusinesses, 
+  onSelectionChange,
+  onRefresh
+}) => {
   const router = useRouter();
 
-  const onPage = (event) => {
-    setFirst(event.first);
-    setRows(event.rows);
-  };
-
   const handleViewProfile = (rowData) => {
-    // Store the business data in sessionStorage
     sessionStorage.setItem('currentBusinessData', JSON.stringify(rowData));
     router.push('/pages/business/businessdetail');
   };
@@ -32,84 +24,28 @@ export default function BussniessTable() {
   const handleDeactivate = async (businessId) => {
     try {
       if (window.confirm("Are you sure you want to deactivate this business?")) {
-        setLoading(true);
         await postData('/admin-panel/business/deactivate', { user_id: businessId });
-        
-        setData(prevData => 
-          prevData.map(item => 
-            item.ID === businessId ? {...item, Status: "Inactive"} : item
-          )
-        );
-        
         alert("Business deactivated successfully");
+        onRefresh();
       }
     } catch (error) {
       console.error("Error deactivating business:", error);
-      if (error.response && error.response.status === 401) {
-        alert("Session expired. Please login again.");
-        router.push("/login");
-      } else {
-        alert("Failed to deactivate business");
-      }
-    } finally {
-      setLoading(false);
+      alert(error.response?.data?.message || "Failed to deactivate business");
     }
   };
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const response = await getData('/admin-panel/business');
-      if (response && response.data) {
-        const mappedData = response.data.results.map(item => ({
-          ID: item.id,
-          BusinessName: item.business_name,
-          Email: item.business_email,
-          "Phone Number": item.business_number,
-          website: item.business_website,
-          BusinessType: item.business_category,
-          Status: item.is_active ? "Active" : "Inactive",
-          "Date Created": new Date(item.created_at).toLocaleDateString(),
-          "Last Update": new Date(item.updated_at).toLocaleDateString(),
-          Coordinates: item.business_address,
-          businessId: item.user_id,
-          business_logo: item.business_logo?.[0] || "",
-        }));
-        setData(mappedData);
-        setTotalRecords(response.data.count);
-      }
-    } catch (error) {
-      console.error("Error fetching business data:", error);
-      if (error.response && error.response.status === 401) {
-        alert("Session expired. Please login again.");
-        router.push("/login");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const statusCheck = (rowData) => {
-    let statusClasses;
-    switch (rowData.Status) {
-      case "Active":
-        statusClasses = "bg-[#06B64C] text-white p-1 rounded-lg text-center";
-        break;
-      case "Deleted":
-        statusClasses = "bg-[#C7233F] text-white p-1 rounded-lg text-center";
-        break;
-      case "Inactive":
-        statusClasses = "bg-[#C7233F] text-white p-1 rounded-lg text-center";
-        break;
-      default:
-        statusClasses = "py-1 px-2 rounded";
-    }
-
-    return <div className={statusClasses}>{rowData.Status}</div>;
+    const statusClasses = {
+      "Active": "bg-[#06B64C] text-white p-1 rounded-lg text-center",
+      "Inactive": "bg-[#C7233F] text-white p-1 rounded-lg text-center",
+      "Deleted": "bg-[#C7233F] text-white p-1 rounded-lg text-center"
+    };
+    
+    return (
+      <div className={statusClasses[rowData.Status] || "py-1 px-2 rounded"}>
+        {rowData.Status}
+      </div>
+    );
   };
 
   const actionButton = (rowData) => {
@@ -139,98 +75,6 @@ export default function BussniessTable() {
     );
   };
 
-  const headerCheckbox = () => {
-    const isAllSelected = data.length && selectedData.length === data.length;
-
-    const toggleSelectAll = () => {
-      if (isAllSelected) {
-        setSelectedData([]);
-      } else {
-        setSelectedData(data.map((item) => item.ID));
-      }
-    };
-
-    return (
-      <input
-        type="checkbox"
-        checked={isAllSelected}
-        onChange={toggleSelectAll}
-        className="form-checkbox"
-      />
-    );
-  };
-
-  const toggleRowSelection = (rowData) => {
-    const isSelected = selectedData.includes(rowData.ID);
-    setSelectedData((prevSelected) => {
-      if (isSelected) {
-        return prevSelected.filter((id) => id !== rowData.ID);
-      } else {
-        return [...prevSelected, rowData.ID];
-      }
-    });
-  };
-
-  const rowCheckbox = (rowData) => {
-    const isSelected = selectedData.includes(rowData.ID);
-    return (
-      <input
-        type="checkbox"
-        checked={isSelected}
-        onChange={() => toggleRowSelection(rowData)}
-        className="form-checkbox"
-      />
-    );
-  };
-
-  const HeaderIcon = () => {
-    return (
-      <svg
-        width="10"
-        height="12"
-        viewBox="0 0 10 12"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M7.5 1.5V10.4999"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M3.99996 9L2.49998 10.5L1 9"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M2.5 10.4999V1.5"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M8.99996 2.99998L7.49998 1.5L6 2.99998"
-          stroke="#757575"
-          strokeWidth="1.12499"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  };
-
-  const renderHeader = (label, Icon) => (
-    <div className="flex items-center gap-2">
-      <span>{label}</span>
-      <Icon />
-    </div>
-  );
-
   const ImageLogo = (rowData) => {
     return (
       <div className="w-10 h-10">
@@ -252,101 +96,168 @@ export default function BussniessTable() {
 
   return (
     <div className="p-5">
+      <style jsx global>{`
+        /* Custom Paginator Styling */
+        .business-paginator .p-paginator {
+          background: transparent;
+          border: none;
+          padding: 5 px;
+          justify-content: flex-end;
+        }
+        
+        .business-paginator .p-paginator-current {
+          color: #6b7280;
+          font-size: 0.875rem;
+          margin-right: 1rem;
+        }
+        
+        .business-paginator .p-paginator-page,
+        .business-paginator .p-paginator-first,
+        .business-paginator .p-paginator-prev,
+        .business-paginator .p-paginator-next,
+        .business-paginator .p-paginator-last {
+          min-width: 2.5rem;
+          height: 2.5rem;
+          margin: 0 0.15rem;
+          border-radius: 20px;
+          border: 1px solid #e5e7eb;
+          background: #e5e7eb;
+          color: #4b5563;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .business-paginator .p-paginator-page:hover,
+        .business-paginator .p-paginator-first:hover,
+        .business-paginator .p-paginator-prev:hover,
+        .business-paginator .p-paginator-next:hover,
+        .business-paginator .p-paginator-last:hover {
+          background: #f3f4f6;
+          border-color: #d1d5db;
+        }
+        
+        .business-paginator .p-paginator-page.p-highlight {
+          background: #d8b039;
+          color: white;
+          border-color: #d8b039;
+          font-weight: 600;
+        }
+        
+        .business-paginator .p-dropdown {
+          border: 1px solid #e5e7eb;
+          border-radius: 16px;
+          height: 2.5rem;
+          margin-left: 0.5rem;
+        }
+        
+        .business-paginator .p-dropdown .p-dropdown-label {
+          padding-top: 5rem;
+          padding-bottom: 0.5rem;
+        }
+      `}</style>
+
       <div className="table-scroll-wrapper">
         <DataTable
           value={data}
           dataKey="ID"
           paginator
-          first={first}
-          rows={rows}
-          totalRecords={totalRecords}
-          onPage={onPage}
+          rows={10}
           loading={loading}
-          rowsPerPageOptions={[5, 10, 20]}
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate={`Showing {first} to {last} of ${totalRecords} entries`}
+          selection={selectedBusinesses}
+          onSelectionChange={onSelectionChange}
           tableStyle={{ minWidth: "200rem" }}
+         // paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+          paginatorClassName="business-paginator"
+          //rowsPerPageOptions={[5, 10, 20, 50]}
+          className="p-datatable-striped"
+          emptyMessage="No businesses found"
         >
           <Column
-            header={headerCheckbox()}
-            body={rowCheckbox}
-            headerStyle={getHeaderStyle()}
-            bodyStyle={getBodyStyle()}
-          />
-          <Column
-            header={renderHeader("Actions", HeaderIcon)}
+            header="Actions"
             body={actionButton}
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
           />
           <Column
-            header={renderHeader("Logo", HeaderIcon)}
+            header="Logo"
             body={ImageLogo}
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
           />
           <Column
-            header={renderHeader("Business Name", HeaderIcon)}
+            header="Business Name"
             field="BusinessName"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("ID", HeaderIcon)}
+            header="ID"
             field="ID"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("Email", HeaderIcon)}
+            header="Email"
             field="Email"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("Phone Number", HeaderIcon)}
+            header="Phone Number"
             field="Phone Number"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
           />
           <Column
-            header={renderHeader("Website", HeaderIcon)}
+            header="Website"
             field="website"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
           />
           <Column
-            header={renderHeader("Business Type", HeaderIcon)}
+            header="Business Type"
             field="BusinessType"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("Address", HeaderIcon)}
+            header="Address"
             field="Coordinates"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
           />
           <Column
-            header={renderHeader("Status", HeaderIcon)}
+            header="Status"
             body={statusCheck}
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("Date Created", HeaderIcon)}
+            header="Date Created"
             field="Date Created"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
           <Column
-            header={renderHeader("Last Update", HeaderIcon)}
+            header="Last Update"
             field="Last Update"
             headerStyle={getHeaderStyle()}
             bodyStyle={getBodyStyle()}
+            sortable
           />
         </DataTable>
       </div>
     </div>
   );
-}
+};
+
+export default BusinessTable;

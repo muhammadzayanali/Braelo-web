@@ -29,7 +29,7 @@ const Listing = () => {
           <h1 className="text-[#78828A] text-[24px] font-[500]">Listing</h1>
         </div>
         <div className="flex gap-2">
-          <div className="max-w-sm">
+          {/* <div className="max-w-sm">
             <select
               id="Massive Actions"
               value={status}
@@ -40,9 +40,9 @@ const Listing = () => {
               <option value="Enable">Enable</option>
               <option value="Disabled">Disabled</option>
             </select>
-          </div>
+          </div> */}
 
-          <div className="max-w-sm">
+          {/* <div className="max-w-sm">
             <select
               id="Subcategory"
               value={status}
@@ -55,7 +55,7 @@ const Listing = () => {
               <option value="Bikes">Bikes</option>
               <option value="Jobs">Jobs</option>
             </select>
-          </div>
+          </div> */}
 
           <button
             onClick={handleNewListing}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dropdown } from "primereact/dropdown";
@@ -7,9 +7,10 @@ import { getHeaderStyle, getBodyStyle } from "../Users/UserData";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getData, postData, deleteData, updateData } from "@/app/API/method";
-import ChatModal from "../ChatModal";
+import { debounce } from "lodash";
 
 const API_URL = "/admin-panel/support";
+const SEARCH_API_URL = "/admin-panel/support/search";
 const REPORT_API_URL = "/report/request";
 
 const statusOptions = [
@@ -22,9 +23,12 @@ const statusOptions = [
 const AllTickets = () => {
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [OpenChat, setOpenChat] = useState(false);
+  const [creationDate, setCreationDate] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailUser, setEmailUser] = useState(null);
+
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
@@ -33,6 +37,14 @@ const AllTickets = () => {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [error, setError] = useState(null);
   const dropdownRef = useRef(null);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (email, status, date) => {
+      await fetchFilteredTickets(email, status, date);
+    }, 500),
+    []
+  );
 
   useEffect(() => {
     fetchSupportRequests();
@@ -69,15 +81,58 @@ const AllTickets = () => {
       const response = await getData(API_URL);
 
       if (response?.data?.results && Array.isArray(response.data.results)) {
-        setRequests(response.data.results);
-        setFilteredRequests(response.data.results);
+        const formattedRequests = response.data.results.map((request) => ({
+          ...request,
+          created_at: formatDate(request.created_at),
+          updated_at: formatDate(request.updated_at),
+        }));
+        setRequests(formattedRequests);
+        setFilteredRequests(formattedRequests);
       } else {
         setRequests([]);
         setFilteredRequests([]);
         showToast("No support tickets found", "info");
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Failed to fetch support tickets";
+      const errorMsg =
+        error.response?.data?.message || "Failed to fetch support tickets";
+      setError(errorMsg);
+      showToast(errorMsg, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFilteredTickets = async (
+    email = "",
+    status = "All",
+    date = ""
+  ) => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams();
+
+      if (email) params.append("search_email", email);
+      if (status !== "All") params.append("request_status", status);
+      if (date) params.append("creation_date", formatDateForAPI(date));
+
+      const response = await getData(`${SEARCH_API_URL}?${params.toString()}`);
+
+      if (response?.data?.results && Array.isArray(response.data.results)) {
+        const formattedRequests = response.data.results.map((request) => ({
+          ...request,
+          created_at: formatDate(request.created_at),
+          updated_at: formatDate(request.updated_at),
+        }));
+        setFilteredRequests(formattedRequests);
+      } else {
+        setFilteredRequests([]);
+        showToast("No matching tickets found", "info");
+      }
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Failed to search tickets";
       setError(errorMsg);
       showToast(errorMsg, "error");
     } finally {
@@ -86,6 +141,7 @@ const AllTickets = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
       month: "long",
@@ -97,6 +153,15 @@ const AllTickets = () => {
     });
   };
 
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleDeleteRequest = async (ticketId) => {
     if (!window.confirm("Are you sure you want to delete this ticket?")) {
       return;
@@ -104,21 +169,18 @@ const AllTickets = () => {
 
     try {
       setLoading(true);
-      
-      const formData = new FormData();
-      formData.append('feedback_id', ticketId);
 
-      const response = await deleteData(
-        REPORT_API_URL,
-        formData
-      );
+      const formData = new FormData();
+      formData.append("feedback_id", ticketId);
+
+      const response = await deleteData(REPORT_API_URL, formData);
 
       if (response.status === 200 || response.status === 204) {
-        setRequests(prevRequests =>
-          prevRequests.filter(request => request.id !== ticketId)
+        setRequests((prevRequests) =>
+          prevRequests.filter((request) => request.id !== ticketId)
         );
-        setFilteredRequests(prevRequests =>
-          prevRequests.filter(request => request.id !== ticketId)
+        setFilteredRequests((prevRequests) =>
+          prevRequests.filter((request) => request.id !== ticketId)
         );
         showToast("Ticket deleted successfully!");
       } else {
@@ -136,18 +198,18 @@ const AllTickets = () => {
   const handleStatusChange = async (newStatus, rowData) => {
     try {
       setStatusUpdating(true);
-      
+
       const formData = new FormData();
-      formData.append('feedback_id', rowData.id);
-      formData.append('status', newStatus);
-  
-      const response = await updateData(
-        REPORT_API_URL,
-        formData
-      );
-  
-      if (response.data?.message?.includes("Successfully") || response.status === 201) {
-        const updatedRequests = requests.map(request =>
+      formData.append("feedback_id", rowData.id);
+      formData.append("status", newStatus);
+
+      const response = await updateData(REPORT_API_URL, formData);
+
+      if (
+        response.data?.message?.includes("Successfully") ||
+        response.status === 201
+      ) {
+        const updatedRequests = requests.map((request) =>
           request.id === rowData.id
             ? { ...request, status: newStatus }
             : request
@@ -156,7 +218,7 @@ const AllTickets = () => {
         setFilteredRequests(updatedRequests);
         showToast(response.data.message || "Status updated successfully!");
       } else if (response.status === 200 || response.status === 201) {
-        const updatedRequests = requests.map(request =>
+        const updatedRequests = requests.map((request) =>
           request.id === rowData.id
             ? { ...request, status: newStatus }
             : request
@@ -170,9 +232,9 @@ const AllTickets = () => {
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message;
       console.error("Error updating status:", error);
-      
+
       if (errorMsg.includes("Updated Successfully")) {
-        const updatedRequests = requests.map(request =>
+        const updatedRequests = requests.map((request) =>
           request.id === rowData.id
             ? { ...request, status: newStatus }
             : request
@@ -205,33 +267,22 @@ const AllTickets = () => {
     setSelectedTicket(null);
   };
 
-  const handleSearch = (e) => {
+  const handleEmailSearch = (e) => {
     const value = e.target.value;
-    setSearchTerm(value);
-    filterRequests(value, statusFilter);
+    setSearchEmail(value);
+    debouncedSearch(value, statusFilter, creationDate);
   };
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    setIsDropdownOpen(false); 
-    filterRequests(searchTerm, status);
+    setIsDropdownOpen(false);
+    debouncedSearch(searchEmail, status, creationDate);
   };
 
-  const filterRequests = (search, status) => {
-    let updatedRequests = [...requests];
-    if (search) {
-      updatedRequests = updatedRequests.filter(
-        (request) =>
-          request.email.toLowerCase().includes(search.toLowerCase()) ||
-          (request.subject && request.subject.toLowerCase().includes(search.toLowerCase()))
-      );
-    }
-    if (status !== "All") {
-      updatedRequests = updatedRequests.filter(
-        (request) => request.status === status
-      );
-    }
-    setFilteredRequests(updatedRequests);
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setCreationDate(date);
+    debouncedSearch(searchEmail, statusFilter, date);
   };
 
   const statusDropdownTemplate = (rowData) => {
@@ -242,7 +293,7 @@ const AllTickets = () => {
           options={statusOptions}
           onChange={(e) => handleStatusChange(e.value, rowData)}
           placeholder="Select Status"
-          className="w-full text-black rounded-md"
+          className="w-full text-black rounded-md bg-slate-200 p-2"
           panelClassName="bg-gray-100 border border-gray-300 shadow-lg p-5 text-black"
           disabled={statusUpdating}
         />
@@ -256,39 +307,42 @@ const AllTickets = () => {
   const actionTemplate = (rowData) => (
     <div className="flex gap-2">
       <button
-        className="flex items-center border border-black px-4 py-2 rounded-lg"
-        onClick={handleOpenChat}
+        className="flex items-center border border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+        onClick={() => {
+          setEmailUser(rowData);
+          setIsEmailModalOpen(true);
+        }}
         disabled={loading}
       >
         Response
       </button>
+
       <button
-        className="flex items-center border border-black px-4 py-2 rounded-lg"
+        className="flex items-center border border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
         onClick={() => handleDeleteRequest(rowData.id)}
         disabled={loading}
       >
         Delete
       </button>
       <button
-        className="flex items-center border border-black px-4 py-2 rounded-lg"
+        className="flex items-center border border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
         onClick={() => openDetailsModalHandler(rowData)}
         disabled={loading}
       >
         View Details
       </button>
-      <ChatModal isOpen={OpenChat} onClose={handleClosechat} />
     </div>
   );
 
   return (
     <div className="p-5 table-scroll-wrapper">
       <ToastContainer />
-      
+
       {error && (
         <div className="bg-red-500 text-white p-3 rounded mb-4">
           Error: {error}
-          <button 
-            className="float-right font-bold" 
+          <button
+            className="float-right font-bold"
             onClick={() => setError(null)}
           >
             ×
@@ -304,20 +358,34 @@ const AllTickets = () => {
         </div>
       )}
 
-      {/* Search and Status Filter */}
-      <div className="flex gap-4 mb-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleSearch}
-          placeholder="Search by email, subject"
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {/* Search and Filters */}
+      <div className="flex gap-4 mb-4 flex-wrap">
+        {/* Email Search */}
+        <div className="relative flex-1 min-w-[250px]">
+          <input
+            type="text"
+            value={searchEmail}
+            onChange={handleEmailSearch}
+            placeholder="Search by email"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {searchEmail && (
+            <button
+              onClick={() => {
+                setSearchEmail("");
+                debouncedSearch("", statusFilter, creationDate);
+              }}
+              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          )}
+        </div>
 
         {/* Status Filter Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <div
-            className="flex items-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer"
+            className="flex items-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer hover:bg-gray-200 transition"
             onClick={() => setIsDropdownOpen((prev) => !prev)}
           >
             <input
@@ -329,7 +397,9 @@ const AllTickets = () => {
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 ml-2 text-gray-500"
+              className={`h-5 w-5 ml-2 text-gray-500 transition-transform ${
+                isDropdownOpen ? "transform rotate-180" : ""
+              }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -344,34 +414,46 @@ const AllTickets = () => {
           </div>
 
           {isDropdownOpen && (
-            <div className="absolute mt-1 w-full bg-gray-100 rounded-lg shadow-lg z-10">
+            <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-10 border border-gray-200">
               <ul>
-                <li
-                  onClick={() => handleStatusFilter("All")}
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer text-black"
-                >
-                  All
-                </li>
-                <li
-                  onClick={() => handleStatusFilter("On Hold")}
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer text-black"
-                >
-                  On Hold
-                </li>
-                <li
-                  onClick={() => handleStatusFilter("Resolved")}
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer text-black"
-                >
-                  Resolved
-                </li>
-                <li
-                  onClick={() => handleStatusFilter("Pending")}
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer text-black"
-                >
-                  Pending
-                </li>
+                {["All", "Active", "On Hold", "Resolved", "In Progress"].map(
+                  (status) => (
+                    <li
+                      key={status}
+                      onClick={() => handleStatusFilter(status)}
+                      className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                        statusFilter === status
+                          ? "bg-blue-50 text-blue-600"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {status}
+                    </li>
+                  )
+                )}
               </ul>
             </div>
+          )}
+        </div>
+
+        {/* Date Filter */}
+        <div className="relative min-w-[200px]">
+          <input
+            type="date"
+            value={creationDate}
+            onChange={handleDateChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {creationDate && (
+            <button
+              onClick={() => {
+                setCreationDate("");
+                debouncedSearch(searchEmail, statusFilter, "");
+              }}
+              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
           )}
         </div>
       </div>
@@ -382,42 +464,50 @@ const AllTickets = () => {
         first={first}
         rows={rows}
         onPage={onPage}
+        scrollable
         scrollHeight="700px"
-        //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        rowsPerPageOptions={[5, 10, 20]}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
         tableStyle={{ minWidth: "100rem" }}
         className="custom-paginator"
         loading={loading}
+        emptyMessage="No tickets found"
       >
         <Column
           field="id"
           header="ID"
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
+          sortable
         />
         <Column
           field="email"
           header="Email"
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
+          sortable
         />
         <Column
           field="subject"
           header="Subject"
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
+          sortable
         />
         <Column
           field="description"
           header="Description"
           headerStyle={getHeaderStyle()}
-          bodyStyle={getBodyStyle()}
+          bodyStyle={{ ...getBodyStyle(), whiteSpace: "pre-wrap" }}
+          sortable
         />
         <Column
           field="created_at"
           header="Submit Date"
-          body={(rowData) => formatDate(rowData.created_at)}
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
+          sortable
         />
         <Column
           field="status"
@@ -425,6 +515,7 @@ const AllTickets = () => {
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
           body={statusDropdownTemplate}
+          sortable
         />
         <Column
           body={actionTemplate}
@@ -437,32 +528,71 @@ const AllTickets = () => {
       {/* Details Modal */}
       {selectedTicket && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative max-h-[80vh] overflow-y-auto">
             <h2 className="text-lg font-bold mb-4">Ticket Details</h2>
-            <p>
-              <strong>ID:</strong> {selectedTicket.id}
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedTicket.email}
-            </p>
-            <p>
-              <strong>Subject:</strong> {selectedTicket.subject}
-            </p>
-            <p>
-              <strong>Description:</strong> {selectedTicket.description}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedTicket.status}
-            </p>
-            <p>
-              <strong>Submit Date:</strong> {formatDate(selectedTicket.created_at)}
-            </p>
+            <div className="space-y-3">
+              <p>
+                <strong>ID:</strong> {selectedTicket.id}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedTicket.email}
+              </p>
+              <p>
+                <strong>Subject:</strong> {selectedTicket.subject}
+              </p>
+              <p>
+                <strong>Description:</strong> {selectedTicket.description}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedTicket.status}
+              </p>
+              <p>
+                <strong>Submit Date:</strong> {selectedTicket.created_at}
+              </p>
+              {selectedTicket.updated_at && (
+                <p>
+                  <strong>Last Updated:</strong> {selectedTicket.updated_at}
+                </p>
+              )}
+            </div>
             <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl"
               onClick={closeDetailsModalHandler}
             >
               &times;
             </button>
+          </div>
+        </div>
+      )}
+      {isEmailModalOpen && emailUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
+              Start Chat with Business
+            </h2>
+            <p className="mb-4">
+              Click below to send an email to:{" "}
+              <strong>{emailUser.email}</strong>
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsEmailModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <a
+                href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(
+                  emailUser.email
+                )}&su=Hello&body=Hi%20there!%20I%20wanted%20to%20connect%20with%20you.`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="px-4 py-2 bg-[#CD9403] text-white rounded hover:bg-[#b37f02]">
+                  Open in Gmail
+                </button>
+              </a>
+            </div>
           </div>
         </div>
       )}

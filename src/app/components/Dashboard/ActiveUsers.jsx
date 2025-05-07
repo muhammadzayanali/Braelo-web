@@ -1,5 +1,6 @@
-import React from "react";
-import Image from "next/image"; // Next.js Image component for optimization
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { getData } from "@/app/API/method"; // Make sure this path is correct
 
 const peopleData = [
   {
@@ -30,13 +31,28 @@ const peopleData = [
     location: "New York",
     accountSet: "Account Set 2023",
   },
-
-  // Add more users with unique ids and information
 ];
 
 const ActiveUsers = () => {
-  const totalActiveUsers = 360;
-  const Newusers = 30;
+  const [totalActiveUsers, setTotalActiveUsers] = useState(0);
+  const [newUsers, setNewUsers] = useState(30); // You can later fetch this too if needed
+
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      try {
+        const response = await getData("/admin-panel/users/active");
+        if (response?.data) {
+          setTotalActiveUsers(response.data.online_users || 0);
+          setNewUsers(response.data.new_users || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching active users:", error);
+      }
+    };
+  
+    fetchActiveUsers();
+  }, []);
+  
 
   return (
     <div className="p-4">
@@ -45,17 +61,15 @@ const ActiveUsers = () => {
         <h4 className="text-xl font-bold text-gray-800">User Statistics</h4>
         <div className="mt-4 flex justify-between items-center">
           <div>
-            <p className="text-gray-600 text-md ">
-              Total Active Users
-            </p>
-            <p className="text-2xl font-semibold text-green-500 text-center ">
+            <p className="text-gray-600 text-md">Total Active Users</p>
+            <p className="text-2xl font-semibold text-green-500 text-center">
               {totalActiveUsers}
             </p>
           </div>
           <div>
-            <p className="text-gray-600 text-md ">New Users</p>
-            <p className="text-2xl font-semibold text-blue-500 text-center ">
-              {Newusers}
+            <p className="text-gray-600 text-md">New Users</p>
+            <p className="text-2xl font-semibold text-blue-500 text-center">
+              {newUsers}
             </p>
           </div>
         </div>
@@ -85,10 +99,7 @@ const ActiveUsers = () => {
                   <div className="absolute -left-5 transform -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#06B64C]"></div>
                 </div>
                 <div>
-                  <p className="mb-0 text-sm text-gray-800">
-                    {person.name}
-                    <br />
-                  </p>
+                  <p className="mb-0 text-sm text-gray-800">{person.name}</p>
                 </div>
               </div>
               <div>

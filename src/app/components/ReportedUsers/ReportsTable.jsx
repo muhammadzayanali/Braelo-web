@@ -1,293 +1,265 @@
-import React, { useState, useEffect } from "react";
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Button } from "primereact/button"; // Import Button component
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
 import { getData } from "@/app/API/method";
+import { debounce } from "lodash";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-export default function ReportsTable() {
+const API_URL = "/admin-panel/reported/user";
+const SEARCH_API_URL = "/admin-panel/reported/user/search";
+
+const ReportsTable = ({ searchQuery = "", statusFilter = "All", dateFilter = "" }) => {
   const [reports, setReports] = useState([]);
-  const [first, setFirst] = useState(0); // Starting row for pagination
-  const [rows, setRows] = useState(5);
-  const [selectedReport, setSelectedReport] = useState(null); // State to hold the selected report for the modal
-  const [isModalVisible, setModalVisible] = useState(false); // State to control modal visibility
+  const [first, setFirst] = useState(0);
+  const [rows, setRows] = useState(10);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const onPage = (event) => {
-    setFirst(event.first); // Update starting row for current page
-    setRows(event.rows); // Update rows per page if changed
-  };
-
-  const sampleData = [
-    {
-      id: 1,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 2,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 3,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 4,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 5,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 6,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 7,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-
-    {
-      id: 8,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 9,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-    {
-      id: 10,
-      ReportedTo: "AIzak",
-      ReportedBy: "JohnDoe",
-      description: "Describe your reason in detail",
-      status: "pending",
-      Reason: "Offensive",
-      DateCreated: "23-7-2023",
-    },
-  ];
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (query, status, date) => {
+      await fetchReports(query, status, date);
+    }, 500),
+    []
+  );
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const data = await getData("/admin-panel/report/action");
-        console.log("API Response:", data);
-        
-        if (data?.data?.results) {
-          const formattedReports = data.data.results.map((report, index) => ({
-            id: report.id || index + 1,
-            ReportedTo: report.reported_to_user || "No Title",
-            ReportedBy: report.reported_by_user || "No Message",
-            description: report.issue_description || "No Description",
-            status: report.status || "Pending",
-            Reason: report.Reason || "No Reason",
-            DateCreated: report.DateCreated || new Date().toISOString(),
-          }));
-          setReports(formattedReports);
-        } else {
-          throw new Error("Invalid reports data structure");
-        }
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-        // Fallback to sample data if API fails
-        setReports(sampleData);
+    if (searchQuery || statusFilter !== "All" || dateFilter) {
+      debouncedSearch(searchQuery, statusFilter, dateFilter);
+    } else {
+      fetchReports();
+    }
+  }, [searchQuery, statusFilter, dateFilter]);
+
+  const fetchReports = async (query = "", status = "All", date = "") => {
+    try {
+      setLoading(true);
+      let url = API_URL;
+      const params = new URLSearchParams();
+
+      if (query || status !== "All" || date) {
+        url = SEARCH_API_URL;
+        if (query) params.append('search_query', query);
+        if (status !== "All") params.append('report_status', status);
+        if (date) params.append('creation_date', formatDateForAPI(date));
       }
-    };
-  
-    fetchReports();
-  }, []);
+
+      const response = await getData(`${url}?${params.toString()}`);
+      
+      if (response?.data?.results) {
+        setReports(formatReportData(response.data.results));
+      } else {
+        setReports([]);
+        if (query || status !== "All" || date) {
+          toast.info("No matching reports found");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      toast.error(error.response?.data?.message || "Failed to load reports");
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatReportData = (reports) => {
+    return reports.map((report) => ({
+      id: report.id,
+      reportedTo: report.reported_to || "N/A",
+      reportedBy: report.reported_by || "N/A",
+      description: report.description || "No description",
+      status: report.status || "Pending",
+      reason: report.reason || "No reason specified",
+      createdAt: formatDate(report.created_at) || "N/A",
+      updatedAt: formatDate(report.updated_at) || "N/A"
+    }));
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const onPage = (event) => {
+    setFirst(event.first);
+    setRows(event.rows);
+  };
 
   const actionBodyTemplate = (rowData) => {
-    const handleAction = (userId, action) => {
-      if (action === "view") {
-        setSelectedReport(rowData); // Set the selected report
-        setModalVisible(true); // Show the modal
-      } else if (action === "delete") {
-        (`Are you sure delete this request, ${userId}`);
-      }
-    };
-
     return (
       <select
-        onChange={(e) => handleAction(rowData.id, e.target.value)}
-        className="border rounded-md p-1"
+        onChange={(e) => e.target.value === "view" && showReportDetails(rowData)}
+        className="border rounded-md p-1 text-sm"
       >
-        {/* <option value="">Actions</option> */}
-        <option value="view">View Detail</option>
-        {/* <option value="delete">Delete</option>
-        <option value="response">Response</option> */}
+        <option value="">Actions</option>
+        <option value="view">View Details</option>
       </select>
     );
   };
 
-  const descriptionBodyTemplate = (rowData) => (
-    <input
-      type="text"
-      value={rowData.description}
-      onChange={(e) => handleDescriptionChange(rowData.id, e.target.value)}
-      className="border rounded-md p-1"
-    />
-  );
-
-  const handleDescriptionChange = (id, newDescription) => {
-    setReports((prevReports) =>
-      prevReports.map((report) =>
-        report.id === id ? { ...report, description: newDescription } : report
-      )
+  const statusBodyTemplate = (rowData) => {
+    const statusClass = {
+      'Pending': 'bg-yellow-100 text-yellow-800',
+      'Resolved': 'bg-green-100 text-green-800',
+      'Rejected': 'bg-red-100 text-red-800'
+    }[rowData.status] || 'bg-gray-100 text-gray-800';
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs ${statusClass}`}>
+        {rowData.status}
+      </span>
     );
   };
 
-  // Close the modal
+  const showReportDetails = (report) => {
+    setSelectedReport(report);
+    setModalVisible(true);
+  };
+
   const closeModal = () => {
     setModalVisible(false);
-    setSelectedReport(null); // Clear the selected report
+    setSelectedReport(null);
   };
 
   return (
-    <div className="card p-5 table-scroll-wrapper">
-      <DataTable
-        value={reports}
-        paginator
-        first={first}
-        rows={rows}
-        onPage={onPage}
-        scrollHeight="400px"
-       // rowsPerPageOptions={[5, 10, 20]}
-        // paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-        // currentPageReportTemplate="Showing 1 to 10 of 50 entries"
-        tableStyle={{ minWidth: "100rem" }}
-        className="custom-paginator"
-      >
-        <Column
-          field="id"
-          header="Report ID"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="ReportedTo"
-          header="Reported To"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="ReportedBy"
-          header="Reported By"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="description"
-          header="Description"
-          body={descriptionBodyTemplate}
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="Reason"
-          header="Reason"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="DateCreated"
-          header="Date Created"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          field="status"
-          header="Status"
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-        <Column
-          header="Actions"
-          body={actionBodyTemplate}
-          bodyStyle={getBodyStyle()}
-          headerStyle={getHeaderStyle()}
-        />
-      </DataTable>
+    <div className="p-5">
+      <ToastContainer position="top-right" autoClose={3000} />
+      
+      {/* Reports Table */}
+      <div className="card table-scroll-wrapper">
+        <DataTable
+          value={reports}
+          paginator
+          first={first}
+          rows={rows}
+          onPage={onPage}
+          scrollHeight="400px"
+          rowsPerPageOptions={[5, 10, 20, 50]}
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+          tableStyle={{ minWidth: "100rem" }}
+          className="custom-paginator"
+          loading={loading}
+          emptyMessage="No reports found"
+        >
+          <Column
+            field="id"
+            header="Report ID"
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            field="reportedTo"
+            header="Reported To"
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            field="reportedBy"
+            header="Reported By"
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            field="reason"
+            header="Reason"
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            field="createdAt"
+            header="Date Created"
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            field="status"
+            header="Status"
+            body={statusBodyTemplate}
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+            sortable
+          />
+          <Column
+            header="Actions"
+            body={actionBodyTemplate}
+            bodyStyle={getBodyStyle()}
+            headerStyle={getHeaderStyle()}
+          />
+        </DataTable>
+      </div>
 
-      {/* Custom Modal */}
-      {isModalVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-1/2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">Report Detail</h3>
+      {/* Report Details Modal */}
+      {isModalVisible && selectedReport && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Report Details</h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700"
-                aria-label="Close Modal"
+                className="text-gray-500 hover:text-gray-700 text-2xl"
               >
-                <span className="text-2xl">&times;</span> {/* Close icon */}
+                &times;
               </button>
             </div>
-            <div className="mt-4">
-              {selectedReport && (
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-semibold">Report ID:</p>
+                <p>{selectedReport.id}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Status:</p>
+                <p>{selectedReport.status}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Reported To:</p>
+                <p>{selectedReport.reportedTo}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Reported By:</p>
+                <p>{selectedReport.reportedBy}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="font-semibold">Reason:</p>
+                <p>{selectedReport.reason}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="font-semibold">Description:</p>
+                <p className="whitespace-pre-wrap">{selectedReport.description}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Date Created:</p>
+                <p>{selectedReport.createdAt}</p>
+              </div>
+              {selectedReport.updatedAt && (
                 <div>
-                  <p>
-                    <strong>Reported To:</strong> {selectedReport.ReportedTo}
-                  </p>
-                  <p>
-                    <strong>Reported By:</strong> {selectedReport.ReportedBy}
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {selectedReport.description}
-                  </p>
-                  <p>
-                    <strong>Reason:</strong> {selectedReport.Reason}
-                  </p>
-                  <p>
-                    <strong>Date Created:</strong> {selectedReport.DateCreated}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {selectedReport.status}
-                  </p>
+                  <p className="font-semibold">Last Updated:</p>
+                  <p>{selectedReport.updatedAt}</p>
                 </div>
               )}
             </div>
@@ -296,4 +268,6 @@ export default function ReportsTable() {
       )}
     </div>
   );
-}
+};
+
+export default ReportsTable;
