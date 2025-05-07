@@ -20,6 +20,68 @@ export default function BannerManagement() {
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
 
+  // Custom Paginator Styling
+  const paginatorStyles = `
+    .banner-paginator .p-paginator {
+      background: transparent;
+      border-radius: 20px;
+      padding: 10px 10px;
+      justify-content: flex-end;
+    }
+    
+    .banner-paginator .p-paginator-current {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-right: 1rem;
+    }
+    
+    .banner-paginator .p-paginator-page,
+    .banner-paginator .p-paginator-first,
+    .banner-paginator .p-paginator-prev,
+    .banner-paginator .p-paginator-next,
+    .banner-paginator .p-paginator-last {
+      min-width: 2.5rem;
+      height: 2.5rem;
+      margin: 0 0.15rem;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      background: #e5e7eb;
+      color: #4b5563;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .banner-paginator .p-paginator-page:hover,
+    .banner-paginator .p-paginator-first:hover,
+    .banner-paginator .p-paginator-prev:hover,
+    .banner-paginator .p-paginator-next:hover,
+    .banner-paginator .p-paginator-last:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    
+    .banner-paginator .p-paginator-page.p-highlight {
+      background: #d8b039;
+      color: white;
+      border-color: #d8b039;
+      font-weight: 600;
+    }
+    
+    .banner-paginator .p-dropdown {
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      height: 2.5rem;
+      margin-left: 0.5rem;
+    }
+    
+    .banner-paginator .p-dropdown .p-dropdown-label {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+  `;
+
   const onPage = (event) => {
     setFirst(event.first);
     setRows(event.rows);
@@ -199,6 +261,7 @@ export default function BannerManagement() {
 
   return (
     <div className="p-6">
+      <style jsx global>{paginatorStyles}</style>
       <div className="flex justify-between p-5 border-b">
         <div className="flex items-center gap-2">
           <BackButton />
@@ -230,12 +293,13 @@ export default function BannerManagement() {
         first={first}
         rows={rows}
         onPage={onPage}
-        rowsPerPageOptions={[5, 10, 20]}
+        //rowsPerPageOptions={[5, 10, 20]}
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} banners"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         tableStyle={{ minWidth: "100%" }}
         loading={loading}
         emptyMessage="No banners found. Please add a new banner."
+        paginatorClassName="banner-paginator"
       >
         <Column
           field="user_id"

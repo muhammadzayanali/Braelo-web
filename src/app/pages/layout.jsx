@@ -16,9 +16,9 @@ const Layout = ({ children }) => {
           <Sidebar />
         </div>
 
-        <div className="  w-[calc(100%-256px)] h-full flex flex-col border rounded-tl-[50px] bg-white z-50">
+        <div className="  w-[calc(100%-256px)] h-full flex flex-col border rounded-l-[50px] bg-white z-50">
           <NavBar />
-          <div className="p-5 overflow-y-auto border rounded-bl-[50px]">{children}</div>
+          <div className="p-5 overflow-y-auto">{children}</div>
         </div>
       </div>
     </div>

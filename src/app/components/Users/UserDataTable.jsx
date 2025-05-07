@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dialog } from "primereact/dialog";
+import { getBodyStyle, getHeaderStyle } from "@/app/components/Users/UserData";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,7 +26,7 @@ export default function UserTable({ data, loading, onRefresh }) {
   .user-paginator .p-paginator {
       background: transparent;
       border-radius: 20px;
-      padding: 10px 10px;
+      padding: 0px 5px;
       justify-content: flex-end;
     }
     
@@ -45,7 +46,7 @@ export default function UserTable({ data, loading, onRefresh }) {
       margin: 0 0.15rem;
       border-radius: 20px;
       border: 1px solid #e5e7eb;
-      background: white;
+      background: #e5e7eb;
       color: #4b5563;
       transition: all 0.2s;
       display: flex;
@@ -181,18 +182,6 @@ export default function UserTable({ data, loading, onRefresh }) {
     return <div>Client</div>;
   };
 
-  const getHeaderStyle = () => ({
-    backgroundColor: '#f8f9fa',
-    color: '#495057',
-    fontWeight: 'bold',
-    padding: '1rem',
-    borderBottom: '1px solid #dee2e6'
-  });
-
-  const getBodyStyle = () => ({
-    padding: '1rem',
-    borderBottom: '1px solid #dee2e6'
-  });
 
   const deleteDialogFooter = (
     <div className="flex justify-end gap-3 mt-4">

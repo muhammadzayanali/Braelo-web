@@ -466,8 +466,8 @@ const AllTickets = () => {
         onPage={onPage}
         scrollable
         scrollHeight="700px"
-        rowsPerPageOptions={[5, 10, 20]}
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        //rowsPerPageOptions={[5, 10, 20]}
+        //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
         tableStyle={{ minWidth: "100rem" }}
         className="custom-paginator"
