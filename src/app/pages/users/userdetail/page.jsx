@@ -36,13 +36,22 @@ const Userdetail = () => {
   useEffect(() => {
     const handleDataUpdate = () => {
       const updatedData = sessionStorage.getItem("currentUserData");
-      setUserData(JSON.parse(updatedData));
+      if (updatedData) {
+        setUserData(JSON.parse(updatedData));
+      }
     };
-    window.addEventListener("userData", handleDataUpdate);
+  
+    if (typeof window !== "undefined") {
+      window.addEventListener("userData", handleDataUpdate);
+    }
+  
     return () => {
-      window.removeEventListener("userData", handleDataUpdate);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("userData", handleDataUpdate);
+      }
     };
-  }, [userData]);
+  }, []);
+  
 
   const OpeModal = () => {
     setEditModalOpen(!isModalOpen);
