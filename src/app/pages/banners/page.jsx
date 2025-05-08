@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { getBodyStyle, getHeaderStyle } from "@/app/components/Users/UserData";
@@ -100,7 +100,8 @@ export default function BannerManagement() {
         : [item.business_banner || ""],
     }));
 
-  const fetchBanners = async () => {
+  // Using useCallback to memoize the fetch function
+  const fetchBanners = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -126,11 +127,12 @@ export default function BannerManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // Fixed useEffect with proper dependencies
   useEffect(() => {
     fetchBanners();
-  }, []);
+  }, [fetchBanners]); // Only re-run if fetchBanners changes
 
   const editBanner = (banner) => {
     setSelectedBanner({
@@ -218,19 +220,31 @@ export default function BannerManagement() {
     }
   };
 
-  const imageTemplate = (rowData) => {
-    const imageUrl = rowData.business_banner?.[0] || "https://via.placeholder.com/80";
+  const ImageTemplate = ({ rowData }) => {
+    const [currentSrc, setCurrentSrc] = useState(
+      rowData.business_banner?.[0] || "/b6.png"
+    );
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+      setCurrentSrc(rowData.business_banner?.[0] || "/b6.png");
+      setHasError(false);
+    }, [rowData.business_banner]);
+
+    const handleError = () => {
+      if (!hasError) {
+        setCurrentSrc("/b6.png");
+        setHasError(true);
+      }
+    };
 
     return (
       <div className="w-16 h-16 flex items-center justify-center">
         <img
-          src={imageUrl}
+          src={currentSrc}
           alt={rowData.business_name || "Banner"}
           className="max-w-full max-h-full rounded-md object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "https://via.placeholder.com/80";
-          }}
+          onError={handleError}
         />
       </div>
     );
@@ -293,13 +307,13 @@ export default function BannerManagement() {
         first={first}
         rows={rows}
         onPage={onPage}
-        //rowsPerPageOptions={[5, 10, 20]}
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} banners"
-        //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+       // rowsPerPageOptions={[5, 10, 20]}
+       // currentPageReportTemplate="Showing {first} to {last} of {totalRecords} banners"
+       // paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         tableStyle={{ minWidth: "100%" }}
         loading={loading}
         emptyMessage="No banners found. Please add a new banner."
-        paginatorClassName="banner-paginator"
+        paginatorClassName="banner-paginator m-5"
       >
         <Column
           field="user_id"
@@ -308,7 +322,7 @@ export default function BannerManagement() {
           bodyStyle={getBodyStyle()}
         />
         <Column
-          body={imageTemplate}
+          body={(rowData) => <ImageTemplate rowData={rowData} />}
           header="Banner Image"
           headerStyle={getHeaderStyle()}
           bodyStyle={getBodyStyle()}
