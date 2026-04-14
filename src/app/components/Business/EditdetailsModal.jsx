@@ -37,7 +37,7 @@ const EditdetailsModal = ({ isOpen, onClose, businessData, onUpdateSuccess }) =>
     if (!isOpen) return;
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDy-uoC7NTV52ghbZu7bDQT6M227FigwjI&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBunVYwlxf7Lyq5d4B10tmOoUxBRrt4QL4&libraries=places`;
     script.async = true;
     script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);

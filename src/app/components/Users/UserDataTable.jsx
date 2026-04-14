@@ -245,10 +245,10 @@ export default function UserTable({ data, loading, onRefresh }) {
             modal
             closable={false}
             className="rounded-xl"
-            style={{ width: '400px', borderRadius: '12px' }}
+            style={{ width: '400px', borderRadius: '12px',ba }}
             footer={deleteDialogFooter}
           >
-            <div className="text-center text-lg text-gray-800 p-4">
+            <div className="text-center text-lg text-gray-800 p-4 bg-white">
               <p>Are you sure you want to deactivate this user?</p>
               <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
             </div>

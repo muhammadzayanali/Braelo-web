@@ -46,7 +46,7 @@ const Form = () => {
     if (locationField && !autocompleteRef.current) {
       if (!window.google) {
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDy-uoC7NTV52ghbZu7bDQT6M227FigwjI&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBunVYwlxf7Lyq5d4B10tmOoUxBRrt4QL4&libraries=places`;
         script.async = true;
         script.defer = true;
         script.onload = initializeAutocomplete;
@@ -312,7 +312,7 @@ export default Form;
 //     if (locationField && !autocompleteRef.current) {
 //       if (!window.google) {
 //         const script = document.createElement('script');
-//         script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDy-uoC7NTV52ghbZu7bDQT6M227FigwjI&libraries=places`;
+//         script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBunVYwlxf7Lyq5d4B10tmOoUxBRrt4QL4&libraries=places`;
 //         script.async = true;
 //         script.defer = true;
 //         script.onload = initializeAutocomplete;
