@@ -32,19 +32,31 @@ const NavBar = () => {
 
   useEffect(() => {
     const fetchUserName = async () => {
+      const token = localStorage.getItem("token");
       try {
-        const response = await fetch("/auth/user/profile");
+        const response = await fetch("https://braelo-v1-bdaqhdc4c7d9fdb7.canadacentral-01.azurewebsites.net/auth/user/profile", {
+          credentials: "include", // sends cookies if needed
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
         const data = await response.json();
-        setUserName(data.name || "Admin");
+        setUserName(data.name || "");
       } catch (error) {
         console.error("Error fetching user name:", error);
         setUserName("Admin");
       }
     };
-
+  
     fetchUserName();
   }, []);
-
+  
   const toggleSettingsDropdown = () => {
     setSettingsDropdownOpen((prev) => !prev);
   };
