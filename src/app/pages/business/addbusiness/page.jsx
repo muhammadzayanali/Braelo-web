@@ -1,4 +1,5 @@
 "use client";
+import { getGoogleMapsScriptUrl } from "@/lib/googleMaps";
 import React, { useState, useRef, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -45,7 +46,7 @@ const AddNewBusiness = () => {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBunVYwlxf7Lyq5d4B10tmOoUxBRrt4QL4&libraries=places`;
+    script.src = getGoogleMapsScriptUrl();
     script.async = true;
     script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);

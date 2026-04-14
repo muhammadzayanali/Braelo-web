@@ -1,3 +1,4 @@
+import { getGoogleMapsScriptUrl } from "@/lib/googleMaps";
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,7 +32,7 @@ const Sports = () => {
   useEffect(() => {
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBunVYwlxf7Lyq5d4B10tmOoUxBRrt4QL4&libraries=places`;
+      script.src = getGoogleMapsScriptUrl();
       script.async = true;
       script.defer = true;
       script.onload = () => setMapLoaded(true);
