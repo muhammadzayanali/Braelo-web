@@ -9,6 +9,7 @@ import {
 } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
+import ListingEmptyState from "./ListingEmptyState";
 import { Update_data } from "./Data";
 
 const CATEGORY_ENDPOINTS = {
@@ -560,27 +561,31 @@ const ActiveBusiListing = ({ user_id }) => {
   return (
     <>
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {data.map((card, index) => (
-            <ListingCard
-              key={index}
-              image={card.image}
-              icons={card.icons}
-              price={card.price}
-              title={card.title}
-              salary={card.salary}
-              description={card.description}
-              toggle={<CardToggle status={card.status === true} />}
-              onIconClick={(icon) => {
-                if (icon === "/g1.png") handleEditClick(card);
-                if (icon === "/g2.png") handleDeleteClick(card);
-                if (icon === "/g3.png") handleOpenDetail(card);
-              }}
-            />
-          ))}
-        </div>
+        {data.length === 0 ? (
+          <ListingEmptyState />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {data.map((card, index) => (
+              <ListingCard
+                key={index}
+                image={card.image}
+                icons={card.icons}
+                price={card.price}
+                title={card.title}
+                salary={card.salary}
+                description={card.description}
+                toggle={<CardToggle status={card.status === true} />}
+                onIconClick={(icon) => {
+                  if (icon === "/g1.png") handleEditClick(card);
+                  if (icon === "/g2.png") handleDeleteClick(card);
+                  if (icon === "/g3.png") handleOpenDetail(card);
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* New Pagination */}
+        {data.length > 0 && (
         <div className="flex justify-between items-center mt-4">
           <div className="text-sm text-gray-600">
             Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of {pagination.totalItems} entries
@@ -617,6 +622,7 @@ const ActiveBusiListing = ({ user_id }) => {
             </button>
           </div>
         </div>
+        )}
 
         {isDetailModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

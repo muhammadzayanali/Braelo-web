@@ -9,6 +9,7 @@ import {
 } from "@/app/API/method";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
+import ListingEmptyState from "./ListingEmptyState";
 
 const Vehicles = () => {
   // State management
@@ -483,24 +484,28 @@ const Vehicles = () => {
         </div> */}
 
         {/* Vehicle Listings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {data.map((card, index) => (
-            <ListingCard
-              key={index}
-              image={card.image}
-              icons={card.icons}
-              price={card.price}
-              title={card.title}
-              description={card.description}
-              toggle={<CardToggle status={card.status === "active"} />}
-              onIconClick={(icon) => {
-                if (icon === "/g1.png") handleEditClick(card);
-                if (icon === "/g2.png") handleDeleteClick(card);
-                if (icon === "/g3.png") handleOpenDetail(card);
-              }}
-            />
-          ))}
-        </div>
+        {data.length === 0 ? (
+          <ListingEmptyState />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {data.map((card, index) => (
+              <ListingCard
+                key={index}
+                image={card.image}
+                icons={card.icons}
+                price={card.price}
+                title={card.title}
+                description={card.description}
+                toggle={<CardToggle status={card.status === "active"} />}
+                onIconClick={(icon) => {
+                  if (icon === "/g1.png") handleEditClick(card);
+                  if (icon === "/g2.png") handleDeleteClick(card);
+                  if (icon === "/g3.png") handleOpenDetail(card);
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Detail Modal */}
         {isDetailModalOpen && (
@@ -844,22 +849,25 @@ const Vehicles = () => {
             </div>
           </div>
         )}
-        <div className="flex justify-end items-center mt-4">
-          <div className="flex space-x-2 items-center justify-ends">
-            {/* Prev Button */}
-            <button
-              onClick={() => fetchData(pagination.currentPage - 1)}
-              disabled={!pagination.hasPrev || loading}
-              className={`p-3 rounded-md ${
-                pagination.hasPrev && !loading
-                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <img src="/left.png" alt="" />
-            </button>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-              (page) => (
+        {data.length > 0 && (
+          <div className="flex justify-end items-center mt-4">
+            <div className="flex space-x-2 items-center justify-ends">
+              {/* Prev Button */}
+              <button
+                onClick={() => fetchData(pagination.currentPage - 1)}
+                disabled={!pagination.hasPrev || loading}
+                className={`p-3 rounded-md ${
+                  pagination.hasPrev && !loading
+                    ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <img src="/left.png" alt="" />
+              </button>
+              {Array.from(
+                { length: pagination.totalPages },
+                (_, i) => i + 1
+              ).map((page) => (
                 <button
                   key={page}
                   onClick={() => fetchData(page)}
@@ -872,21 +880,21 @@ const Vehicles = () => {
                 >
                   {page}
                 </button>
-              )
-            )}
-            <button
-              onClick={() => fetchData(pagination.currentPage + 1)}
-              disabled={!pagination.hasNext || loading}
-              className={`p-3 rounded-md ${
-                pagination.hasNext && !loading
-                  ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <img src="/right.png" alt="" />
-            </button>
+              ))}
+              <button
+                onClick={() => fetchData(pagination.currentPage + 1)}
+                disabled={!pagination.hasNext || loading}
+                className={`p-3 rounded-md ${
+                  pagination.hasNext && !loading
+                    ? "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <img src="/right.png" alt="" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <ToastContainer
