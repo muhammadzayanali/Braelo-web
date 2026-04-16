@@ -81,6 +81,15 @@ export default function UserTable({ data, loading, onRefresh }) {
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
+
+    .user-deactivate-dialog.p-dialog {
+      background-color: #ffffff;
+    }
+    .user-deactivate-dialog .p-dialog-header,
+    .user-deactivate-dialog .p-dialog-content,
+    .user-deactivate-dialog .p-dialog-footer {
+      background-color: #ffffff;
+    }
   `;
 
   const showToast = (type, message) => {
@@ -244,11 +253,13 @@ export default function UserTable({ data, loading, onRefresh }) {
             onHide={hideDeleteDialog}
             modal
             closable={false}
-            className="rounded-xl"
-            style={{ width: '400px', borderRadius: '12px',ba }}
+            className="rounded-xl user-deactivate-dialog"
+            style={{ width: "400px", borderRadius: "12px", backgroundColor: "#ffffff" }}
+            maskStyle={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+            contentStyle={{ backgroundColor: "#ffffff" }}
             footer={deleteDialogFooter}
           >
-            <div className="text-center text-lg text-gray-800 p-4 bg-white">
+            <div className="text-center text-lg text-gray-800 p-4">
               <p>Are you sure you want to deactivate this user?</p>
               <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
             </div>

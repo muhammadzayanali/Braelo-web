@@ -1,13 +1,52 @@
 "use client";
 // pages/listing/addlisting/[slug]/[name]/page.jsx (Form Page)
 import { getGoogleMapsScriptUrl } from "@/lib/googleMaps";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
 import BackButton from "@/app/components/BackButton";
 import { FormData as FormStructure } from "@/app/components/Listing/FormData";
 import { postBusiData } from "@/app/API/method";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+/** API may return HTTP 200 with { status: 400, message, error } in body */
+function getListingSaveFailure(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  const candidates = [payload, payload.data].filter(
+    (x) => x && typeof x === "object"
+  );
+  for (const obj of candidates) {
+    const status = obj.status;
+    if (typeof status === "number" && status >= 400) return obj;
+    if (typeof status === "string") {
+      const n = Number(status);
+      if (!Number.isNaN(n) && n >= 400) return obj;
+    }
+    if (typeof obj.error === "string" && obj.error.trim()) return obj;
+    if (obj.success === false) return obj;
+  }
+  return null;
+}
+
+function listingSaveErrorMessage(obj) {
+  if (!obj) return "Submission failed.";
+  if (typeof obj.error === "string" && obj.error.trim()) return obj.error.trim();
+  if (typeof obj.message === "string" && obj.message.trim())
+    return obj.message.trim();
+  return "Submission failed.";
+}
+
+const toastOpts = {
+  position: "top-right",
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+};
 
 const Form = () => {
+  const router = useRouter();
   const { slug, name } = useParams();
   const searchParams = useSearchParams();
   const endpoint = searchParams.get("endpoint");
@@ -126,20 +165,48 @@ const Form = () => {
         );
       });
 
-      // Use the endpoint from URL params with base URL
-      const response = await postBusiData(
+      // Backend expects exactly "True" or "False" (see validation: from_business)
+      const fromBizRaw =
+        searchParams.get("from_business") ??
+        searchParams.get("fromBusiness") ??
+        document.getElementById("from_business")?.value ??
+        "";
+      const fromBusiness =
+        fromBizRaw === "True" ||
+        fromBizRaw === "true" ||
+        fromBizRaw === "1"
+          ? "True"
+          : "False";
+      formPayload.set("from_business", fromBusiness);
+
+      const payload = await postBusiData(
         `/listing/${endpoint}`,
         formPayload
       );
 
-      if (response.success) {
-        alert("Listing submitted successfully!");
+      const failure = getListingSaveFailure(payload);
+
+      if (failure) {
+        toast.error(listingSaveErrorMessage(failure), toastOpts);
       } else {
-        throw new Error(response.message || "Submission failed");
+        const successMsg =
+          (typeof payload?.message === "string" && payload.message.trim()) ||
+          "Listing submitted successfully!";
+        toast.success(successMsg, toastOpts);
+        // Brief pause so the toast is visible before leaving the page
+        setTimeout(() => {
+          router.push("/pages/listing");
+        }, 800);
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert(`Error: ${error.message}`);
+      const d = error?.response?.data;
+      const msg =
+        (typeof d?.error === "string" && d.error.trim()) ||
+        (typeof d?.message === "string" && d.message.trim()) ||
+        error?.message ||
+        "Submission failed. Please try again.";
+      toast.error(msg, toastOpts);
     } finally {
       setIsSubmitting(false);
     }
@@ -228,6 +295,17 @@ const Form = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <BackButton />
 
       <form
@@ -258,7 +336,7 @@ const Form = () => {
           type="submit"
           disabled={isSubmitting}
           className={`w-full py-2 px-4 text-white font-medium rounded transition-colors ${
-            isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+            isSubmitting ? "bg-[#D8B039]" : "bg-[#D8B039] hover:bg-[#dab852]"
           }`}
         >
           {isSubmitting ? "Submitting..." : "Submit Listing"}

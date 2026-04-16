@@ -7,35 +7,148 @@ import BackButton from "@/app/components/BackButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { postBusiData } from "@/app/API/method";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-// Categories and subcategories
+// Categories (API values) and subcategories — keys must match backend expectations
 const categories = [
   {
     value: "Vehicles",
     label: "Vehicles",
-    subcategories: ["Cars", "Motorcycles", "Trucks"],
+    subcategories: [
+      "Cars",
+      "Motorcycle",
+      "Truck",
+      "Bike",
+      "Boat",
+      "Van",
+      "Scooter",
+      "partsandaccessories",
+      "Rentals",
+    ],
   },
   {
-    value: "Restaurants",
-    label: "Restaurants",
-    subcategories: ["Fast Food", "Fine Dining", "Cafe"],
+    value: "realestate",
+    label: "Real estate",
+    subcategories: [
+      "House",
+      "Apartment",
+      "Land",
+      "mobilehome",
+      "commercial",
+      "bedroom",
+      "suite",
+      "studio",
+      "vacationhome",
+      "basement",
+    ],
   },
-
+  {
+    value: "electronics",
+    label: "Electronics",
+    subcategories: [
+      "smartphones",
+      "computers",
+      "appliances",
+      "games",
+      "servicesandparts",
+    ],
+  },
+  {
+    value: "events",
+    label: "Events",
+    subcategories: ["networkingevents", "concert", "festival"],
+  },
+  {
+    value: "jobs",
+    label: "Jobs",
+    subcategories: ["fulltime", "parttime", "freelancer", "helper", "homeoffice"],
+  },
+  {
+    value: "furniture",
+    label: "Furniture",
+    subcategories: ["couch", "tables", "chairs", "beds", "customfurniture"],
+  },
+  {
+    value: "fashion",
+    label: "Fashion",
+    subcategories: [
+      "clothes",
+      "shoes",
+      "accessories",
+      "beautyproducts",
+      "jewelry",
+    ],
+  },
+  {
+    value: "kids",
+    label: "Kids",
+    subcategories: [
+      "health",
+      "toys",
+      "transport",
+      "accessories",
+      "classes",
+      "babysitter",
+      "daycare",
+      "schooloffices",
+      "afterschoolprogram",
+      "activities",
+    ],
+  },
+  {
+    value: "sportsandhobby",
+    label: "Sports and hobby",
+    subcategories: [
+      "sportsequipment",
+      "musicalinstruments",
+      "collecteditems",
+      "games",
+      "camping",
+      "outdooractivities",
+    ],
+  },
 ];
+
+/** API may return HTTP 200 with { status: 400, message, error } — treat as failure */
+function getBusinessSaveFailure(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  const candidates = [payload, payload.data].filter(
+    (x) => x && typeof x === "object"
+  );
+  for (const obj of candidates) {
+    const status = obj.status;
+    if (typeof status === "number" && status >= 400) return obj;
+    if (typeof status === "string") {
+      const n = Number(status);
+      if (!Number.isNaN(n) && n >= 400) return obj;
+    }
+    if (typeof obj.error === "string" && obj.error.trim()) return obj;
+    if (obj.success === false) return obj;
+  }
+  return null;
+}
+
+function businessSaveErrorMessage(obj) {
+  if (!obj) return "Error creating business.";
+  if (typeof obj.error === "string" && obj.error.trim()) return obj.error.trim();
+  if (typeof obj.message === "string" && obj.message.trim())
+    return obj.message.trim();
+  return "Error creating business.";
+}
 
 const AddNewBusiness = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [bannerPreview, setBannerPreview] = useState(null);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
   const imagesInputRef = useRef(null);
+  const formikRef = useRef(null);
 
   // Load Google Maps API
   useEffect(() => {
@@ -56,28 +169,13 @@ const AddNewBusiness = () => {
     };
   }, [router]);
 
-  // Initialize autocomplete for address field
   useEffect(() => {
-    if (!mapLoaded) return;
-
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      document.getElementById("business_address"),
-      { types: ["geocode"] }
-    );
-
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-
-      const { lat, lng } = place.geometry.location;
-      setCoordinates({
-        lat: lat(),
-        lng: lng(),
-      });
-
-      formik.setFieldValue("business_address", place.formatted_address);
-    });
-  }, [mapLoaded]);
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      if (bannerPreview) URL.revokeObjectURL(bannerPreview);
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [logoPreview, bannerPreview, imagePreviews]);
 
   const handleLogoClick = () => {
     logoInputRef.current.click();
@@ -94,35 +192,24 @@ const AddNewBusiness = () => {
   const handleLogoSelected = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      setLogoPreview(URL.createObjectURL(file));
-      setLoading(false);
-    }, 1000);
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   const handleBannerSelected = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      setBannerPreview(URL.createObjectURL(file));
-      setLoading(false);
-    }, 1000);
+    if (bannerPreview) URL.revokeObjectURL(bannerPreview);
+    setBannerPreview(URL.createObjectURL(file));
   };
 
   const handleImagesSelected = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const previews = files.map((file) => URL.createObjectURL(file));
-      setImagePreviews(previews);
-      setLoading(false);
-    }, 1000);
+    setImagePreviews((prev) => {
+      prev.forEach((url) => URL.revokeObjectURL(url));
+      return files.map((file) => URL.createObjectURL(file));
+    });
   };
 
   const fallbackCoordinates = {
@@ -148,11 +235,49 @@ const AddNewBusiness = () => {
     validationSchema: Yup.object({
       business_name: Yup.string().required("Business Name is required"),
       business_address: Yup.string().required("Address is required"),
-      business_number: Yup.string().required("Business Number is required"),
+      business_number: Yup.string()
+        .trim()
+        .required("Business number is required")
+        .matches(
+          /^[\d+\s().-]+$/,
+          "Use only digits, spaces, +, parentheses, or hyphens"
+        )
+        .test(
+          "phone-digits",
+          "Enter a valid phone number (8–15 digits, include country code if needed)",
+          (value) => {
+            if (!value) return false;
+            const digits = value.replace(/\D/g, "");
+            return digits.length >= 8 && digits.length <= 15;
+          }
+        ),
       business_email: Yup.string()
-        .email("Invalid email format")
-        .required("Email is required"),
-      business_website: Yup.string().url("Invalid URL format"),
+        .trim()
+        .required("Business email is required")
+        .max(254, "Email is too long")
+        .email("Enter a valid email address"),
+      business_website: Yup.string()
+        .trim()
+        .max(500, "URL is too long")
+        .test(
+          "website-url",
+          "Enter a valid URL (e.g. https://example.com)",
+          (value) => {
+            if (!value || value.length === 0) return true;
+            const normalized = /^https?:\/\//i.test(value)
+              ? value
+              : `https://${value}`;
+            try {
+              const u = new URL(normalized);
+              const host = u.hostname;
+              if (!host) return false;
+              if (host === "localhost") return true;
+              return host.includes(".");
+            } catch {
+              return false;
+            }
+          }
+        ),
       business_goals: Yup.string(),
       business_category: Yup.string().required("Business Category is required"),
       business_subcategory: Yup.string().required(
@@ -161,13 +286,12 @@ const AddNewBusiness = () => {
     }),
     onSubmit: async (values) => {
       try {
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
+        setIsSubmitting(true);
 
         // Get token from localStorage
         const token = localStorage.getItem("token");
         if (!token) {
+          toast.error("Please log in to continue.");
           router.push("/login");
           return;
         }
@@ -179,9 +303,14 @@ const AddNewBusiness = () => {
           formData.append("business_logo", values.business_logo);
         }
         formData.append("business_address", values.business_address);
-        formData.append("business_number", values.business_number);
-        formData.append("business_email", values.business_email);
-        formData.append("business_website", values.business_website);
+        formData.append("business_number", values.business_number.trim());
+        formData.append("business_email", values.business_email.trim());
+        const rawWebsite = values.business_website?.trim() ?? "";
+        const websiteNormalized =
+          rawWebsite && !/^https?:\/\//i.test(rawWebsite)
+            ? `https://${rawWebsite}`
+            : rawWebsite;
+        formData.append("business_website", websiteNormalized);
         formData.append("business_goals", values.business_goals);
         formData.append("business_category", values.business_category);
         formData.append("business_subcategory", values.business_subcategory);
@@ -201,40 +330,128 @@ const AddNewBusiness = () => {
         );
 
         // Make API call using postData
-        const response = await postBusiData("/auth/business", formData, {
+        const payload = await postBusiData("/auth/business", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
 
-        if (response.data) {
-          setSuccess("Business created successfully!");
-          console.log("Business created successfully:", response.data);
-          // Optionally redirect or reset form
-          // formik.resetForm();
-          // router.push('/businesses');
-        } else {
-          if (response.status === 401) {
-            setError("Session expired. Please login again.");
+        const failure = getBusinessSaveFailure(payload);
+
+        if (failure) {
+          const msg = businessSaveErrorMessage(failure);
+          const unauthorized =
+            failure.status === 401 || payload?.status === 401;
+          if (unauthorized) {
+            toast.error("Session expired. Please log in again.", {
+              position: "top-right",
+              autoClose: 3000,
+            });
             localStorage.removeItem("token");
             router.push("/login");
           } else {
-            setError(response.message || "Error creating business");
+            toast.error(msg, {
+              position: "top-right",
+              autoClose: 4000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
           }
-          console.error("Error creating business:", response);
+          console.error("Error creating business:", payload);
+        } else {
+          toast.success("Business created successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          console.log("Business created successfully:", payload);
         }
-      } catch (error) {
-        setError("Network error. Please try again.");
-        console.error("Network error:", error);
+      } catch (err) {
+        if (err?.response?.status === 401) {
+          toast.error("Session expired. Please log in again.", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
+        }
+        const d = err?.response?.data;
+        const message =
+          (typeof d?.error === "string" && d.error.trim()) ||
+          (typeof d?.message === "string" && d.message.trim()) ||
+          err?.message ||
+          "Network error. Please try again.";
+        toast.error(message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        console.error("Network error:", err);
       } finally {
-        setLoading(false);
+        setIsSubmitting(false);
       }
     },
   });
 
+  formikRef.current = formik;
+
+  // Address autocomplete (after formik + Google Maps are ready)
+  useEffect(() => {
+    if (!mapLoaded) return;
+
+    const input = document.getElementById("business_address");
+    if (!input) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(input, {
+      types: ["geocode"],
+    });
+
+    const listener = autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry) return;
+
+      const { lat, lng } = place.geometry.location;
+      setCoordinates({
+        lat: lat(),
+        lng: lng(),
+      });
+
+      formikRef.current?.setFieldValue(
+        "business_address",
+        place.formatted_address
+      );
+    });
+
+    return () => {
+      if (listener && window.google?.maps?.event?.removeListener) {
+        window.google.maps.event.removeListener(listener);
+      }
+    };
+  }, [mapLoaded]);
+
   return (
     <div className="p-5">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="flex items-center gap-2">
         <BackButton />
         <h1 className="text-[#78828A] text-[24px] font-[500]">
@@ -243,18 +460,6 @@ const AddNewBusiness = () => {
       </div>
 
       <div className="p-5">
-        {/* Success and error messages */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            {success}
-          </div>
-        )}
-
         <form onSubmit={formik.handleSubmit}>
           <label
             htmlFor="business_name"
@@ -281,56 +486,49 @@ const AddNewBusiness = () => {
             <h6 className="text-[#78828A] text-[16px] font-[600]">
               Business Logo
             </h6>
-            <div
-              className="flex flex-col justify-center items-center border-2 border-dotted rounded-lg mt-4"
-              style={{ minHeight: "200px" }}
-            >
-              {loading ? (
-                <div>Loading...</div>
-              ) : (
-                <>
-                  {logoPreview ? (
-                    <img
-                      src={logoPreview}
-                      alt="preview"
-                      className="w-full h-72 object-cover rounded-lg"
+            <div className="mt-4 flex w-full flex-col items-center overflow-hidden rounded-lg border-2 border-dotted border-gray-300 bg-neutral-50/60">
+              <div className="flex min-h-[200px] max-h-[300px] w-full items-center justify-center p-3">
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="max-h-[280px] w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src="/b6.png"
+                      alt="filesicon"
+                      onClick={handleLogoClick}
+                      width={50}
+                      height={50}
+                      className="cursor-pointer"
                     />
-                  ) : (
-                    <div>
-                      <Image
-                        src="/b6.png"
-                        alt="filesicon"
-                        onClick={handleLogoClick}
-                        width={50}
-                        height={50}
-                        className="cursor-pointer"
-                      />
-                      <input
-                        type="file"
-                        name="business_logo"
-                        accept="image/*"
-                        onChange={(e) => {
-                          handleLogoSelected(e);
-                          formik.setFieldValue(
-                            "business_logo",
-                            e.currentTarget.files[0]
-                          );
-                        }}
-                        ref={logoInputRef}
-                        className="hidden"
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col justify-center mt-5">
-                    <p className="text-[16px] text-[#AB9E7D]">
-                      Required dimensions
-                    </p>
-                    <p className="text-[16px] text-[#AB9E7D] text-center">
-                      1080x1920 pixels
-                    </p>
+                    <input
+                      type="file"
+                      name="business_logo"
+                      accept="image/*"
+                      onChange={(e) => {
+                        handleLogoSelected(e);
+                        formik.setFieldValue(
+                          "business_logo",
+                          e.currentTarget.files[0]
+                        );
+                      }}
+                      ref={logoInputRef}
+                      className="hidden"
+                    />
                   </div>
-                </>
-              )}
+                )}
+              </div>
+              <div className="flex flex-col justify-center px-3 pb-4 pt-1">
+                <p className="text-center text-[16px] text-[#AB9E7D]">
+                  Required dimensions
+                </p>
+                <p className="text-center text-[16px] text-[#AB9E7D]">
+                  1080x1920 pixels
+                </p>
+              </div>
             </div>
           </div>
 
@@ -338,56 +536,49 @@ const AddNewBusiness = () => {
             <h6 className="text-[#78828A] text-[16px] font-[600]">
               Business Banner
             </h6>
-            <div
-              className="flex flex-col justify-center items-center border-2 border-dotted rounded-lg mt-4"
-              style={{ minHeight: "200px" }}
-            >
-              {loading ? (
-                <div>Loading...</div>
-              ) : (
-                <>
-                  {bannerPreview ? (
-                    <img
-                      src={bannerPreview}
-                      alt="preview"
-                      className="w-full h-72 object-cover rounded-lg"
+            <div className="mt-4 flex w-full flex-col items-center overflow-hidden rounded-lg border-2 border-dotted border-gray-300 bg-neutral-50/60">
+              <div className="flex min-h-[200px] max-h-[300px] w-full items-center justify-center p-3">
+                {bannerPreview ? (
+                  <img
+                    src={bannerPreview}
+                    alt="Banner preview"
+                    className="max-h-[280px] w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src="/b6.png"
+                      alt="filesicon"
+                      onClick={handleBannerClick}
+                      width={50}
+                      height={50}
+                      className="cursor-pointer"
                     />
-                  ) : (
-                    <div>
-                      <Image
-                        src="/b6.png"
-                        alt="filesicon"
-                        onClick={handleBannerClick}
-                        width={50}
-                        height={50}
-                        className="cursor-pointer"
-                      />
-                      <input
-                        type="file"
-                        name="business_banner"
-                        accept="image/*"
-                        onChange={(e) => {
-                          handleBannerSelected(e);
-                          formik.setFieldValue(
-                            "business_banner",
-                            e.currentTarget.files[0]
-                          );
-                        }}
-                        ref={bannerInputRef}
-                        className="hidden"
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col justify-center mt-5">
-                    <p className="text-[16px] text-[#AB9E7D]">
-                      Required dimensions
-                    </p>
-                    <p className="text-[16px] text-[#AB9E7D] text-center">
-                      1080x1920 pixels
-                    </p>
+                    <input
+                      type="file"
+                      name="business_banner"
+                      accept="image/*"
+                      onChange={(e) => {
+                        handleBannerSelected(e);
+                        formik.setFieldValue(
+                          "business_banner",
+                          e.currentTarget.files[0]
+                        );
+                      }}
+                      ref={bannerInputRef}
+                      className="hidden"
+                    />
                   </div>
-                </>
-              )}
+                )}
+              </div>
+              <div className="flex flex-col justify-center px-3 pb-4 pt-1">
+                <p className="text-center text-[16px] text-[#AB9E7D]">
+                  Required dimensions
+                </p>
+                <p className="text-center text-[16px] text-[#AB9E7D]">
+                  1080x1920 pixels
+                </p>
+              </div>
             </div>
           </div>
 
@@ -395,59 +586,56 @@ const AddNewBusiness = () => {
             <h6 className="text-[#78828A] text-[16px] font-[600]">
               Business Images
             </h6>
-            <div
-              className="flex flex-col justify-center items-center border-2 border-dotted rounded-lg mt-4"
-              style={{ minHeight: "200px" }}
-            >
-              {loading ? (
-                <div>Loading...</div>
-              ) : (
-                <>
-                  {imagePreviews.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-4 w-full p-4">
-                      {imagePreviews.map((preview, index) => (
+            <div className="mt-4 flex w-full flex-col items-center overflow-hidden rounded-lg border-2 border-dotted border-gray-300 bg-neutral-50/60">
+              <div className="flex min-h-[200px] w-full items-start justify-center p-3">
+                {imagePreviews.length > 0 ? (
+                  <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                    {imagePreviews.map((preview, index) => (
+                      <div
+                        key={preview}
+                        className="flex h-44 w-full items-center justify-center overflow-hidden rounded-lg bg-white"
+                      >
                         <img
-                          key={index}
                           src={preview}
-                          alt={`preview-${index}`}
-                          className="w-full h-48 object-cover rounded-lg"
+                          alt={`Business image ${index + 1}`}
+                          className="max-h-full w-full object-contain"
                         />
-                      ))}
-                    </div>
-                  ) : (
-                    <div>
-                      <Image
-                        src="/b6.png"
-                        alt="filesicon"
-                        onClick={handleImagesClick}
-                        width={50}
-                        height={50}
-                        className="cursor-pointer"
-                      />
-                      <input
-                        type="file"
-                        name="business_images"
-                        accept="image/*"
-                        onChange={(e) => {
-                          handleImagesSelected(e);
-                          formik.setFieldValue(
-                            "business_images",
-                            Array.from(e.currentTarget.files)
-                          );
-                        }}
-                        ref={imagesInputRef}
-                        className="hidden"
-                        multiple
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col justify-center mt-5">
-                    <p className="text-[16px] text-[#AB9E7D]">
-                      Upload multiple images
-                    </p>
+                      </div>
+                    ))}
                   </div>
-                </>
-              )}
+                ) : (
+                  <div className="flex min-h-[200px] flex-col items-center justify-center">
+                    <Image
+                      src="/b6.png"
+                      alt="filesicon"
+                      onClick={handleImagesClick}
+                      width={50}
+                      height={50}
+                      className="cursor-pointer"
+                    />
+                    <input
+                      type="file"
+                      name="business_images"
+                      accept="image/*"
+                      onChange={(e) => {
+                        handleImagesSelected(e);
+                        formik.setFieldValue(
+                          "business_images",
+                          Array.from(e.currentTarget.files)
+                        );
+                      }}
+                      ref={imagesInputRef}
+                      className="hidden"
+                      multiple
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col justify-center px-3 pb-4 pt-1">
+                <p className="text-center text-[16px] text-[#AB9E7D]">
+                  Upload multiple images
+                </p>
+              </div>
             </div>
           </div>
 
@@ -473,12 +661,12 @@ const AddNewBusiness = () => {
                 {formik.errors.business_address}
               </div>
             ) : null}
-            {coordinates.lat && coordinates.lng && (
+            {/* {coordinates.lat && coordinates.lng && (
               <div className="text-sm text-gray-500 mt-1">
                 Coordinates: {coordinates.lat.toFixed(6)},{" "}
-                {coordinates.lng.toFixed(6)}
+                {coordinates.lng.toFixed(6)} 
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="flex gap-4 mt-5">
@@ -492,7 +680,10 @@ const AddNewBusiness = () => {
               <input
                 id="business_number"
                 name="business_number"
-                placeholder="Enter business number"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+1 234 567 8900"
                 className="border p-2 rounded-lg w-full mt-2"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -516,7 +707,10 @@ const AddNewBusiness = () => {
               <input
                 id="business_email"
                 name="business_email"
-                placeholder="Enter business email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="name@company.com"
                 className="border p-2 rounded-lg w-full mt-2"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -542,7 +736,10 @@ const AddNewBusiness = () => {
               <input
                 id="business_website"
                 name="business_website"
-                placeholder="Enter website URL"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="https://example.com (optional)"
                 className="border p-2 rounded-lg w-full mt-2"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -567,7 +764,10 @@ const AddNewBusiness = () => {
                 id="business_category"
                 name="business_category"
                 className="border p-2 rounded-lg w-full mt-2"
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue("business_category", e.target.value);
+                  formik.setFieldValue("business_subcategory", "");
+                }}
                 onBlur={formik.handleBlur}
                 value={formik.values.business_category}
               >
@@ -644,9 +844,9 @@ const AddNewBusiness = () => {
           <button
             type="submit"
             className="mt-6 px-6 py-2 bg-[#CD9403] text-white rounded-lg disabled:opacity-50"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? "Submitting..." : "Submit"}
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
         </form>
       </div>
