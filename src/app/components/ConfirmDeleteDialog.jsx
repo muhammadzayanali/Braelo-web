@@ -6,28 +6,31 @@ import { Dialog } from "primereact/dialog";
 const dialogStyles = `
   .confirm-delete-dialog.p-dialog {
     background-color: #ffffff;
-    border-radius: 0.5rem;
+    border-radius: 1.25rem;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18);
+    border: none;
+    box-sizing: border-box;
   }
-  .confirm-delete-dialog .p-dialog-header,
   .confirm-delete-dialog .p-dialog-content,
   .confirm-delete-dialog .p-dialog-footer {
     background-color: #ffffff;
   }
   .confirm-delete-dialog .p-dialog-content {
     text-align: center !important;
-    border-radius: 0.5rem;
-    padding: 1.25rem 1.25rem 0.5rem !important;
+    border-radius: 1.25rem 1.25rem 0 0;
+    padding: 14px !important;
+    box-sizing: border-box;
   }
   .confirm-delete-dialog .p-dialog-footer {
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
     width: 100% !important;
-    gap: 0.75rem !important;
-    padding: 0.75rem 1.25rem 1.25rem !important;
-    border-radius: 0 0 0.5rem 0.5rem;
+    gap: 1rem !important;
+    padding: 14px !important;
+    box-sizing: border-box;
+    border-radius: 0 0 1.25rem 1.25rem;
     border-top: none !important;
   }
 `;
@@ -51,12 +54,12 @@ export default function ConfirmDeleteDialog({
   };
 
   const footer = (
-    <div className="flex w-full flex-row gap-3">
+    <div className="flex w-full flex-row gap-4 p-4">
       <button
         type="button"
         onClick={handleHide}
         disabled={confirmLoading}
-        className="w-full rounded-lg bg-gray-200 py-2.5 text-center text-sm font-medium text-gray-800 transition hover:bg-gray-300 disabled:opacity-50"
+        className="w-full min-h-[48px] rounded-xl bg-[#E5E7EB] py-3 text-center text-sm font-medium text-gray-900 transition hover:bg-gray-300 disabled:opacity-50"
       >
         {cancelLabel}
       </button>
@@ -64,7 +67,7 @@ export default function ConfirmDeleteDialog({
         type="button"
         onClick={onConfirm}
         disabled={confirmLoading}
-        className="w-full rounded-lg bg-red-500 py-2.5 text-center text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-50"
+        className="w-full min-h-[48px] rounded-xl bg-[#EF4444] py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50"
       >
         {confirmLoading ? "Please wait…" : confirmLabel}
       </button>
@@ -79,24 +82,29 @@ export default function ConfirmDeleteDialog({
         onHide={handleHide}
         modal
         closable={false}
-        className="confirm-delete-dialog rounded-lg"
+        showHeader={false}
+        className="confirm-delete-dialog"
         style={{
-          width: "min(400px, 92vw)",
-          borderRadius: "0.5rem",
+          width: "min(28rem, 92vw)",
+          borderRadius: "1.25rem",
           backgroundColor: "#ffffff",
         }}
-        maskStyle={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        maskStyle={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}
         contentStyle={{
           backgroundColor: "#ffffff",
-          borderRadius: "0.5rem 0.5rem 0 0",
+          borderRadius: "1.25rem 1.25rem 0 0",
           textAlign: "center",
         }}
         footer={footer}
       >
-        <div className="mx-auto w-full max-w-sm text-center text-lg text-gray-800">
-          <p className="font-medium leading-snug">{title}</p>
+        <div className="mx-auto w-full text-center p-4">
+          <p className="text-lg font-semibold leading-snug text-slate-800">
+            {title}
+          </p>
           {message ? (
-            <p className="mt-2 text-sm leading-relaxed text-gray-500">{message}</p>
+            <p className="mt-3 text-sm leading-relaxed text-gray-500">
+              {message}
+            </p>
           ) : null}
         </div>
       </Dialog>
