@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { getData } from "@/app/API/method"; // Adjust this import based on your project structure
+import { getData } from "@/app/API/method";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -38,7 +38,7 @@ const ListingCategorystats = () => {
     const fetchListings = async () => {
       try {
         const response = await getData("/admin-panel/collections");
-        const apiData = response?.data || {};
+        const apiData = response?.data ?? response ?? {};
 
         const filteredEntries = Object.entries(categoryMap)
           .filter(([key]) => apiData[key] !== 0 && apiData[key] !== undefined)
@@ -47,6 +47,25 @@ const ListingCategorystats = () => {
             Listings: apiData[key],
             Subcategories: value.subcategories,
           }));
+
+        if (filteredEntries.length === 0) {
+          setChartData({
+            labels: ["No listing data"],
+            datasets: [
+              {
+                label: "Total Listings",
+                data: [0],
+                backgroundColor: LISTINGS_COLOR,
+              },
+              {
+                label: "Total Subcategories",
+                data: [0],
+                backgroundColor: SUBCATEGORIES_COLOR,
+              },
+            ],
+          });
+          return;
+        }
 
         const dynamicChartData = {
           labels: filteredEntries.map((entry) => entry.name),
@@ -67,6 +86,21 @@ const ListingCategorystats = () => {
         setChartData(dynamicChartData);
       } catch (error) {
         console.error("Failed to fetch listings:", error);
+        setChartData({
+          labels: ["Unable to load data"],
+          datasets: [
+            {
+              label: "Total Listings",
+              data: [0],
+              backgroundColor: "#d1d5db",
+            },
+            {
+              label: "Total Subcategories",
+              data: [0],
+              backgroundColor: "#e5e7eb",
+            },
+          ],
+        });
       }
     };
 

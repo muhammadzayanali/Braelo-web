@@ -170,14 +170,10 @@ export default function BannerManagement() {
         formData.append("business_banner", selectedBanner.business_banner_file);
       }
 
-      const response = await updateListData(
+      await updateListData(
         "/admin-panel/business/banner/update",
         formData
       );
-
-      if (!response || response.error || response.status !== 200) {
-        throw new Error(response?.message || "Update failed");
-      }
 
       await fetchBanners();
       setEditModalVisible(false);
@@ -201,20 +197,22 @@ export default function BannerManagement() {
       setLoading(true);
       const bannerId = selectedBanner._id;
 
-      const response = await deleteData("/admin-panel/business/banner/delete", {
+      await deleteData("/admin-panel/business/banner/delete", {
         banner_id: bannerId,
       });
 
-      if (!response || response.error || response.status !== 200) {
-        throw new Error(response?.message || "Delete failed");
-      }
-
-      await fetchBanners();
       setDeleteModalVisible(false);
+      setSelectedBanner(null);
+      await fetchBanners();
       toast.success("Banner deleted successfully");
     } catch (err) {
-      setError(err.message || "Failed to delete banner");
-      toast.error(err.message || "Failed to delete banner");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        "Failed to delete banner";
+      setError(typeof msg === "string" ? msg : "Failed to delete banner");
+      toast.error(typeof msg === "string" ? msg : "Failed to delete banner");
     } finally {
       setLoading(false);
     }

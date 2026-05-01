@@ -2,8 +2,8 @@
 import React, { useState, useRef } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Dialog } from "primereact/dialog";
 import { getBodyStyle, getHeaderStyle } from "@/app/components/Users/UserData";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -81,15 +81,6 @@ export default function UserTable({ data, loading, onRefresh }) {
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
-
-    .user-deactivate-dialog.p-dialog {
-      background-color: #ffffff;
-    }
-    .user-deactivate-dialog .p-dialog-header,
-    .user-deactivate-dialog .p-dialog-content,
-    .user-deactivate-dialog .p-dialog-footer {
-      background-color: #ffffff;
-    }
   `;
 
   const showToast = (type, message) => {
@@ -143,7 +134,8 @@ export default function UserTable({ data, loading, onRefresh }) {
     <div className="flex gap-2">
       <Image
         src="/g3.png"
-        alt="profile view"
+        alt=""
+        title="View user profile"
         width={24}
         height={24}
         onClick={() => handleViewProfile(rowData)} 
@@ -192,23 +184,6 @@ export default function UserTable({ data, loading, onRefresh }) {
   };
 
 
-  const deleteDialogFooter = (
-    <div className="flex justify-end gap-3 mt-4">
-      <button
-        onClick={hideDeleteDialog}
-        className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={deleteUser}
-        className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition"
-      >
-        Deactivate
-      </button>
-    </div>
-  );
-
   return (
     <div className="p-5">
       <style jsx global>{paginatorStyles}</style>
@@ -248,22 +223,13 @@ export default function UserTable({ data, loading, onRefresh }) {
             <Column header="Role" body={RoleDisplay} headerStyle={getHeaderStyle()} bodyStyle={getBodyStyle()} />
           </DataTable>
 
-          <Dialog 
+          <ConfirmDeleteDialog
             visible={deleteDialogVisible}
             onHide={hideDeleteDialog}
-            modal
-            closable={false}
-            className="rounded-xl user-deactivate-dialog"
-            style={{ width: "400px", borderRadius: "12px", backgroundColor: "#ffffff" }}
-            maskStyle={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-            contentStyle={{ backgroundColor: "#ffffff" }}
-            footer={deleteDialogFooter}
-          >
-            <div className="text-center text-lg text-gray-800 p-4">
-              <p>Are you sure you want to deactivate this user?</p>
-              <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
-            </div>
-          </Dialog>
+            onConfirm={deleteUser}
+            title="Are you sure you want to deactivate this user?"
+            confirmLabel="Deactivate"
+          />
         </div>
       )}
     </div>

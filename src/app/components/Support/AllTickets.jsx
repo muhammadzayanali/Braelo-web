@@ -7,7 +7,9 @@ import { getHeaderStyle, getBodyStyle } from "../Users/UserData";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getData, postData, deleteData, updateData } from "@/app/API/method";
-import { debounce } from "lodash";
+import { debounce } from "@/lib/debounce";
+import { extractResultsList } from "@/lib/apiResponse";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 
 const API_URL = "/admin-panel/support";
 const SEARCH_API_URL = "/admin-panel/support/search";
@@ -36,6 +38,8 @@ const AllTickets = () => {
   const [loading, setLoading] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [error, setError] = useState(null);
+  const [ticketToDelete, setTicketToDelete] = useState(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
   const dropdownRef = useRef(null);
 
   // Debounced search function
@@ -79,9 +83,10 @@ const AllTickets = () => {
     try {
       setLoading(true);
       const response = await getData(API_URL);
+      const rows = extractResultsList(response);
 
-      if (response?.data?.results && Array.isArray(response.data.results)) {
-        const formattedRequests = response.data.results.map((request) => ({
+      if (rows.length > 0) {
+        const formattedRequests = rows.map((request) => ({
           ...request,
           created_at: formatDate(request.created_at),
           updated_at: formatDate(request.updated_at),
@@ -118,9 +123,10 @@ const AllTickets = () => {
       if (date) params.append("creation_date", formatDateForAPI(date));
 
       const response = await getData(`${SEARCH_API_URL}?${params.toString()}`);
+      const rows = extractResultsList(response);
 
-      if (response?.data?.results && Array.isArray(response.data.results)) {
-        const formattedRequests = response.data.results.map((request) => ({
+      if (rows.length > 0) {
+        const formattedRequests = rows.map((request) => ({
           ...request,
           created_at: formatDate(request.created_at),
           updated_at: formatDate(request.updated_at),
@@ -162,36 +168,31 @@ const AllTickets = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const handleDeleteRequest = async (ticketId) => {
-    if (!window.confirm("Are you sure you want to delete this ticket?")) {
-      return;
-    }
+  const openDeleteTicket = (ticketId) => {
+    setTicketToDelete(ticketId);
+  };
 
+  const closeDeleteTicket = () => {
+    if (!deleteInProgress) setTicketToDelete(null);
+  };
+
+  const confirmDeleteTicket = async () => {
+    if (ticketToDelete == null) return;
     try {
-      setLoading(true);
-
+      setDeleteInProgress(true);
       const formData = new FormData();
-      formData.append("feedback_id", ticketId);
-
-      const response = await deleteData(REPORT_API_URL, formData);
-
-      if (response.status === 200 || response.status === 204) {
-        setRequests((prevRequests) =>
-          prevRequests.filter((request) => request.id !== ticketId)
-        );
-        setFilteredRequests((prevRequests) =>
-          prevRequests.filter((request) => request.id !== ticketId)
-        );
-        showToast("Ticket deleted successfully!");
-      } else {
-        throw new Error(response.data?.message || "Failed to delete ticket");
-      }
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
+      formData.append("feedback_id", ticketToDelete);
+      await deleteData(REPORT_API_URL, formData);
+      setRequests((prev) => prev.filter((r) => r.id !== ticketToDelete));
+      setFilteredRequests((prev) => prev.filter((r) => r.id !== ticketToDelete));
+      showToast("Ticket deleted successfully!");
+      setTicketToDelete(null);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message;
       setError(errorMsg);
       showToast(`Delete failed: ${errorMsg}`, "error");
     } finally {
-      setLoading(false);
+      setDeleteInProgress(false);
     }
   };
 
@@ -256,9 +257,6 @@ const AllTickets = () => {
     setRows(event.rows);
   };
 
-  const handleOpenChat = () => setOpenChat(true);
-  const handleClosechat = () => setOpenChat(false);
-
   const openDetailsModalHandler = (ticket) => {
     setSelectedTicket(ticket);
   };
@@ -319,7 +317,7 @@ const AllTickets = () => {
 
       <button
         className="flex items-center border border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
-        onClick={() => handleDeleteRequest(rowData.id)}
+        onClick={() => openDeleteTicket(rowData.id)}
         disabled={loading}
       >
         Delete
@@ -596,6 +594,15 @@ const AllTickets = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        visible={ticketToDelete !== null}
+        onHide={closeDeleteTicket}
+        onConfirm={confirmDeleteTicket}
+        title="Are you sure you want to delete this ticket?"
+        confirmLabel="Delete"
+        confirmLoading={deleteInProgress}
+      />
     </div>
   );
 };

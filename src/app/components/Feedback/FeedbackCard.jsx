@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { getData } from "@/app/API/method";
+import { extractResultsList } from "@/lib/apiResponse";
 
 const FeedbackCard = () => {
   const [selectedReaction, setSelectedReaction] = useState("");
@@ -18,19 +19,21 @@ const FeedbackCard = () => {
         }
         
         const response = await getData(url);
-        const data = response.data.results.map((item) => ({
+        const rows = extractResultsList(response);
+        const data = rows.map((item) => ({
           ...item,
-          // Map API fields to your existing structure
           name: item.user_name,
           reaction: item.feedback,
-          date: new Date(item.created_at).toISOString().split('T')[0],
-          // Add a placeholder description since API doesn't provide one
-          description: `User ${item.user_name} marked this as ${item.feedback}`
+          date: item.created_at
+            ? new Date(item.created_at).toISOString().split("T")[0]
+            : "",
+          description: `User ${item.user_name || "Someone"} marked this as ${item.feedback}`,
         }));
-        
+
         setFeedbackData(data);
       } catch (error) {
         console.error("Error fetching feedback:", error);
+        setFeedbackData([]);
       } finally {
         setLoading(false);
       }
@@ -38,11 +41,6 @@ const FeedbackCard = () => {
 
     fetchFeedback();
   }, [selectedReaction]);
-
-  // Filter feedback data based on selected reaction
-  const filteredData = selectedReaction
-    ? feedbackData.filter((feedback) => feedback.feedback === selectedReaction)
-    : feedbackData;
 
   return (
     <div className="space-y-6 mt-6">
@@ -97,11 +95,18 @@ const FeedbackCard = () => {
       {loading && <div className="text-center py-4">Loading feedback...</div>}
 
       {/* Feedback Cards */}
-      {!loading && filteredData.length === 0 && (
-        <div className="text-center py-4">No feedback found</div>
+      {!loading && feedbackData.length === 0 && (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+          <p className="font-medium text-gray-700">No feedback yet</p>
+          <p className="mt-2 text-sm">
+            Feedback appears here when end users submit reactions in the main app. There is no test
+            submission from this admin panel; use the consumer app or staging users to generate sample
+            data.
+          </p>
+        </div>
       )}
 
-      {!loading && filteredData.map(({ id, name, reaction, description, date }) => (
+      {!loading && feedbackData.map(({ id, name, reaction, description, date }) => (
         <div key={id} className="flex items-start bg-white rounded-lg shadow-lg p-6 space-x-4">
           <div className="flex-1">
             <div className="flex items-center justify-between">

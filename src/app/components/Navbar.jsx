@@ -33,29 +33,43 @@ const NavBar = () => {
   useEffect(() => {
     const fetchUserName = async () => {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setUserName("Admin");
+        return;
+      }
+
       try {
-        const response = await fetch("https://braelo-v1-bdaqhdc4c7d9fdb7.canadacentral-01.azurewebsites.net/auth/user/profile", {
-          credentials: "include", // sends cookies if needed
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": token
-          },
-        });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch(
+          "https://braelo-v1-bdaqhdc4c7d9fdb7.canadacentral-01.azurewebsites.net/auth/user/profile",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem("token");
+          setUserName("Admin");
+          router.replace("/");
+          return;
         }
-  
+
+        if (!response.ok) {
+          setUserName("Admin");
+          return;
+        }
+
         const data = await response.json();
-        setUserName(data.name || "");
-      } catch (error) {
-        console.error("Error fetching user name:", error);
+        setUserName(data?.name || data?.data?.name || "Admin");
+      } catch {
         setUserName("Admin");
       }
     };
-  
+
     fetchUserName();
-  }, []);
+  }, [router]);
   
   const toggleSettingsDropdown = () => {
     setSettingsDropdownOpen((prev) => !prev);

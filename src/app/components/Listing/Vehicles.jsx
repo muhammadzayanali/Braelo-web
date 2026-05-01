@@ -8,9 +8,12 @@ import {
   updateListData,
   deleteData,
 } from "@/app/API/method";
+import { patchListingCardActive } from "@/lib/patchListingCardActive";
+import { postListingFlipStatus } from "@/lib/postListingFlipStatus";
 import CardToggle from "./CardToggle";
 import ListingCard from "./LisitngCard";
 import ListingEmptyState from "./ListingEmptyState";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 
 const Vehicles = () => {
   // State management
@@ -414,6 +417,28 @@ const Vehicles = () => {
     }
   };
 
+  const handleToggleStatus = async (card, nextActive) => {
+    const od = card.originalData || {};
+    const listingId = od.listing_id || od.id;
+    if (!listingId) {
+      toast.error("Invalid listing ID");
+      return;
+    }
+    try {
+      setIsUpdating(true);
+      await postListingFlipStatus(listingId, nextActive, "Vehicles");
+      toast.success(nextActive ? "Listing activated" : "Listing deactivated");
+      patchListingCardActive(setData, listingId, nextActive, "string");
+      await fetchData(pagination.currentPage);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update listing status"
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Form fields configuration
   const formFields = [
     { name: "title", label: "Title", type: "text", required: true },
@@ -497,7 +522,13 @@ const Vehicles = () => {
                 price={card.price}
                 title={card.title}
                 description={card.description}
-                toggle={<CardToggle status={card.status === "active"} />}
+                toggle={
+                  <CardToggle
+                    status={card.status === "active"}
+                    onToggle={(next) => handleToggleStatus(card, next)}
+                    disabled={isUpdating}
+                  />
+                }
                 onIconClick={(icon) => {
                   if (icon === "/g1.png") handleEditClick(card);
                   if (icon === "/g2.png") handleDeleteClick(card);
@@ -597,46 +628,12 @@ const Vehicles = () => {
           </div>
         )}
 
-        {/* Delete Modal */}
-        {isDeleteModalOpen && (
-          <div className="fixed -inset-[250px] z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-              <div className="flex justify-between items-center border-b p-4">
-                <h2 className="text-xl font-semibold">Delete Vehicle</h2>
-                <button
-                  onClick={handleCloseDeleteModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="p-6">
-                <p className="text-gray-700 mb-6">
-                  Are you sure you want to delete this vehicle listing? This
-                  action cannot be undone.
-                </p>
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={handleCloseDeleteModal}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteListing}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmDeleteDialog
+          visible={isDeleteModalOpen}
+          onHide={handleCloseDeleteModal}
+          onConfirm={handleDeleteListing}
+          title="Are you sure you want to delete this vehicle listing?"
+        />
 
         {/* Edit Modal */}
         {isEditModalOpen && (

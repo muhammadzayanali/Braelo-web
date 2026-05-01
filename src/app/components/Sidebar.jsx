@@ -25,8 +25,8 @@ const Sidebar = () => {
   // Function to dynamically set the active class based on the path
   const getTabClass = (path) => {
     const isActive = pathname.startsWith(path); // Check if pathname starts with the item path
-    return `flex items-center mt-3 justify-start px-6 py-2 cursor-pointer hover:bg-gray-600 ${
-      isActive ? "bg-[#D8B039] rounded-lg" : ""
+    return `flex items-center mt-3 justify-start px-6 py-2 cursor-pointer hover:bg-gray-600 hover:rounded-lg ${
+      isActive ? "bg-[#D8B039] rounded-lg" : "rounded-lg"
     }`;
   };
 

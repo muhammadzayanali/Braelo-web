@@ -1,11 +1,14 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { getHeaderStyle, getBodyStyle } from "../Users/UserData";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { postData } from "@/app/API/method";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 
 const BusinessTable = ({ 
   data, 
@@ -15,22 +18,39 @@ const BusinessTable = ({
   onRefresh
 }) => {
   const router = useRouter();
+  const [businessToDeactivate, setBusinessToDeactivate] = useState(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   const handleViewProfile = (rowData) => {
     sessionStorage.setItem('currentBusinessData', JSON.stringify(rowData));
     router.push('/pages/business/businessdetail');
   };
 
-  const handleDeactivate = async (businessId) => {
+  const openDeactivateDialog = (businessId) => {
+    setBusinessToDeactivate(businessId);
+  };
+
+  const closeDeactivateDialog = () => {
+    if (!deactivating) setBusinessToDeactivate(null);
+  };
+
+  const confirmDeactivate = async () => {
+    if (businessToDeactivate == null) return;
     try {
-      if (window.confirm("Are you sure you want to deactivate this business?")) {
-        await postData('/admin-panel/business/deactivate', { user_id: businessId });
-        alert("Business deactivated successfully");
-        onRefresh();
-      }
+      setDeactivating(true);
+      await postData("/admin-panel/business/deactivate", {
+        user_id: businessToDeactivate,
+      });
+      toast.success("Business deactivated successfully");
+      setBusinessToDeactivate(null);
+      onRefresh();
     } catch (error) {
       console.error("Error deactivating business:", error);
-      alert(error.response?.data?.message || "Failed to deactivate business");
+      toast.error(
+        error.response?.data?.message || "Failed to deactivate business"
+      );
+    } finally {
+      setDeactivating(false);
     }
   };
 
@@ -66,7 +86,7 @@ const BusinessTable = ({
             alt="deactivate" 
             width={24}
             height={24}
-            onClick={() => handleDeactivate(rowData.businessId)} 
+            onClick={() => openDeactivateDialog(rowData.businessId)} 
             className="cursor-pointer hover:opacity-80"
             title="Deactivate Business"
           />
@@ -96,6 +116,15 @@ const BusinessTable = ({
 
   return (
     <div className="p-5">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <ConfirmDeleteDialog
+        visible={businessToDeactivate !== null}
+        onHide={closeDeactivateDialog}
+        onConfirm={confirmDeactivate}
+        title="Are you sure you want to deactivate this business?"
+        confirmLabel="Deactivate"
+        confirmLoading={deactivating}
+      />
       <style jsx global>{`
         /* Custom Paginator Styling */
         .business-paginator .p-paginator {

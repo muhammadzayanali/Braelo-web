@@ -8,7 +8,7 @@ const PrivacyPolicy = () => {
       <div className="flex items-center gap-2 p-5">
         <BackButton />
         <h1 className="text-[#78828A] text-[24px] font-[500]">
-          Privacy Ploicy
+          Privacy Policy
         </h1>
         
       </div>

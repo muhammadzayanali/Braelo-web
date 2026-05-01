@@ -4,7 +4,8 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { getBodyStyle, getHeaderStyle } from "../Users/UserData";
 import { getData } from "@/app/API/method";
-import { debounce } from "lodash";
+import { debounce } from "@/lib/debounce";
+import { extractResultsList } from "@/lib/apiResponse";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -49,9 +50,10 @@ const ReportsTable = ({ searchQuery = "", statusFilter = "All", dateFilter = "" 
       }
 
       const response = await getData(`${url}?${params.toString()}`);
-      
-      if (response?.data?.results) {
-        setReports(formatReportData(response.data.results));
+      const list = extractResultsList(response);
+
+      if (list.length > 0) {
+        setReports(formatReportData(list));
       } else {
         setReports([]);
         if (query || status !== "All" || date) {

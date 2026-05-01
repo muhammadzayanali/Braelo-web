@@ -5,7 +5,8 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { debounce } from "lodash";
+import { debounce } from "@/lib/debounce";
+import { extractResultsList } from "@/lib/apiResponse";
 import { getData } from "@/app/API/method";
 import Image from "next/image";
 import BackButton from "@/app/components/BackButton";
@@ -27,7 +28,7 @@ const ReportedUser = () => {
   const [showExportOptions, setShowExportOptions] = useState(false);
 
   // API endpoints
-  const API_URL = "/admin-panel/report/action";
+  const API_URL = "/admin-panel/reported/user";
   const SEARCH_API_URL = "/admin-panel/reported/user/search";
 
   // Fetch reports with debouncing
@@ -60,9 +61,10 @@ const ReportedUser = () => {
       }
 
       const response = await getData(`${url}?${params.toString()}`);
-      
-      if (response?.data?.results) {
-        setReports(formatReportData(response.data.results));
+      const list = extractResultsList(response);
+
+      if (list.length > 0) {
+        setReports(formatReportData(list));
       } else {
         setReports([]);
         if (query || status !== "All" || date) {

@@ -5,6 +5,7 @@ import { CategoriesData } from "./CategoriesData";
 import BackButton from "../BackButton";
 import Image from "next/image";
 import EditModal from "./EditModal";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 
 const SubcategoriesTable = () => {
   const { id } = useParams(); // Get category ID from URL
@@ -24,6 +25,7 @@ const SubcategoriesTable = () => {
     )
   );
   const [selectedRows, setSelectedRows] = useState({});
+  const [subcategoryToDelete, setSubcategoryToDelete] = useState(null);
 
   useEffect(() => {
     // Prevent body scroll when component is mounted
@@ -42,12 +44,16 @@ const SubcategoriesTable = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick = (subcategoryId) => {
-    if (confirm("Are you sure you want to delete this subcategory?")) {
-      setSubcategories((prev) =>
-        prev.filter((subcategory) => subcategory.id !== subcategoryId)
-      );
-    }
+  const openDeleteSubcategory = (subcategoryId) => {
+    setSubcategoryToDelete(subcategoryId);
+  };
+
+  const confirmDeleteSubcategory = () => {
+    if (subcategoryToDelete == null) return;
+    setSubcategories((prev) =>
+      prev.filter((subcategory) => subcategory.id !== subcategoryToDelete)
+    );
+    setSubcategoryToDelete(null);
   };
 
   const handleModalClose = () => {
@@ -196,7 +202,8 @@ const SubcategoriesTable = () => {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteClick(subcategory.id)}
+                          type="button"
+                          onClick={() => openDeleteSubcategory(subcategory.id)}
                           className="border border-black px-4 py-2 rounded-lg"
                         >
                           Delete
@@ -212,6 +219,13 @@ const SubcategoriesTable = () => {
           )}
         </div>
       </div>
+
+      <ConfirmDeleteDialog
+        visible={subcategoryToDelete !== null}
+        onHide={() => setSubcategoryToDelete(null)}
+        onConfirm={confirmDeleteSubcategory}
+        title="Are you sure you want to delete this subcategory?"
+      />
 
       {selectedSubcategory && (
         <EditModal

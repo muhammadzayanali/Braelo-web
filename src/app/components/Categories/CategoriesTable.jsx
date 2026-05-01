@@ -4,6 +4,7 @@ import React, { useState,useEffect } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Image } from "primereact/image";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import { useRouter } from "next/navigation";
 import { CategoriesData } from "./CategoriesData";
 import { getHeaderStyle } from "../Users/UserData";
@@ -19,14 +20,22 @@ const CategoriesTable = () => {
   const router = useRouter();
   const [first, setFirst] = useState(0); // Starting row for pagination
   const [rows, setRows] = useState(10);
+  const [categoryPendingDelete, setCategoryPendingDelete] = useState(null);
   const onPage = (event) => {
     setFirst(event.first); // Update starting row for current page
     setRows(event.rows);
   };
 
-  const deleteCategory = (categoryId) => {
-    const updatedCategories = categories.filter((cat) => cat.id !== categoryId);
-    setCategories(updatedCategories);
+  const confirmRemoveCategory = (category) => {
+    setCategoryPendingDelete(category);
+  };
+
+  const executeDeleteCategory = () => {
+    if (!categoryPendingDelete) return;
+    setCategories((prev) =>
+      prev.filter((cat) => cat.id !== categoryPendingDelete.id)
+    );
+    setCategoryPendingDelete(null);
   };
   const viewSubcategories = (category) => {
     router.push(`/pages/categories/${category.id}/subcategories`);
@@ -86,7 +95,8 @@ const CategoriesTable = () => {
     return (
       <div className="flex gap-2">
         <button
-          onClick={() => deleteCategory(rowData.id)}
+          type="button"
+          onClick={() => confirmRemoveCategory(rowData)}
           className="flex items-center  border border-black px-4 py-2 rounded-lg"
           title="Delete"
         >
@@ -149,6 +159,17 @@ const CategoriesTable = () => {
 
   return (
     <div className="p-5 table-scroll-wrapper">
+      <ConfirmDeleteDialog
+        visible={categoryPendingDelete !== null}
+        onHide={() => setCategoryPendingDelete(null)}
+        onConfirm={executeDeleteCategory}
+        title={
+          categoryPendingDelete
+            ? `Are you sure you want to delete “${categoryPendingDelete.name}”?`
+            : "Delete this category?"
+        }
+      />
+
       {isEditModalOpen && (
         <EditModal
           isOpen={isEditModalOpen}

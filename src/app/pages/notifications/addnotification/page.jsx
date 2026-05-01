@@ -2,6 +2,7 @@
 import BackButton from "@/app/components/BackButton";
 import React, { useState } from "react";
 import { postData } from "@/app/API/method";
+import { getApiErrorMessage } from "@/lib/apiResponse";
 import { useRouter } from "next/navigation";
 
 const AddNewNotification = () => {
@@ -73,9 +74,11 @@ const AddNewNotification = () => {
       // router.push("/notifications");
     } catch (err) {
       console.error("Error sending notification:", err);
-      setError(
-        err.response?.data?.detail || "Failed to send notification. Please try again."
-      );
+      setError(getApiErrorMessage(err, "Failed to send notification. Please try again."));
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        router.push("/");
+      }
     } finally {
       setLoading(false);
     }

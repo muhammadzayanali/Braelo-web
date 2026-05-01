@@ -1,12 +1,14 @@
-'use client'; // Use this directive at the top for Next.js client components
+"use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import BackButton from "@/app/components/BackButton";
 import { postData } from "@/app/API/method";
 
 const AddUser = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const formik = useFormik({
     initialValues: {
       fullName: "",
@@ -139,20 +141,42 @@ const AddUser = () => {
             <label className="block text-gray-700 font-bold mb-2" htmlFor="password">
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className={`w-full p-2 border rounded-md ${
-                formik.touched.password && formik.errors.password
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-              required
-            />
+            <div className="relative isolate flex items-center">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className={`relative z-0 w-full p-2 pr-11 border rounded-md ${
+                  formik.touched.password && formik.errors.password
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                tabIndex={0}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowPassword((v) => !v);
+                }}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 p-1.5 text-gray-600 hover:text-[#232F30] rounded-md focus:outline-none focus:ring-2 focus:ring-[#CD9403] bg-white"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? (
+                  <FiEyeOff className="w-5 h-5 pointer-events-none" aria-hidden />
+                ) : (
+                  <FiEye className="w-5 h-5 pointer-events-none" aria-hidden />
+                )}
+              </button>
+            </div>
             {formik.touched.password && formik.errors.password && (
               <p className="text-red-500">{formik.errors.password}</p>
             )}
