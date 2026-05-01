@@ -1,6 +1,8 @@
 "use client";
 import BackButton from "@/app/components/BackButton";
 import React, { useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { postData } from "@/app/API/method";
 import { getApiErrorMessage } from "@/lib/apiResponse";
 import { useRouter } from "next/navigation";
@@ -19,8 +21,6 @@ const AddNewNotification = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -51,14 +51,10 @@ const AddNewNotification = () => {
         "Just dropping by to let you know that there are 5 days left until your plan expires, eh? Do not waste time, get the plan that best fits your pocket now!",
     });
 
-    setError("");
-    setSuccess("");
   };
 
   const handlePublish = async () => {
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     const payload = {
       title: messageData.title,
@@ -66,15 +62,14 @@ const AddNewNotification = () => {
     };
 
     try {
-      const response = await postData("/admin-panel/notification/send", payload);
-      console.log("Notification sent successfully:", response);
-      setSuccess("Notification sent successfully!");
+      await postData("/admin-panel/notification/send", payload);
+      toast.success("Notification created successfully!");
       resetForm();
-      // Optionally redirect after success
-      // router.push("/notifications");
     } catch (err) {
       console.error("Error sending notification:", err);
-      setError(getApiErrorMessage(err, "Failed to send notification. Please try again."));
+      toast.error(
+        getApiErrorMessage(err, "Failed to send notification. Please try again.")
+      );
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         router.push("/");
@@ -86,6 +81,7 @@ const AddNewNotification = () => {
 
   return (
     <div className="p-5">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex items-center gap-2 mb-4">
         <BackButton />
         <h1 className="text-[#78828A] text-2xl font-medium">
@@ -121,7 +117,7 @@ const AddNewNotification = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 relative">
+      {/* <div className="grid grid-cols-2 relative">
         <div className="mt-6">
           <label className="block text-gray-500 mb-2">Message Preview</label>
           <div className="p-4 border border-yellow-300 rounded-lg">
@@ -136,18 +132,7 @@ const AddNewNotification = () => {
             </p>
           </div>
         </div>
-      </div>
-
-      {error && (
-        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-lg">
-          {success}
-        </div>
-      )}
+      </div> */}
 
       <div className="mt-6 flex justify-start gap-2 items-center">
         <button

@@ -5,13 +5,84 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { debounce } from "@/lib/debounce";
-import { extractResultsList } from "@/lib/apiResponse";
-import { getData } from "@/app/API/method";
+import { extractResultsList, getApiErrorMessage } from "@/lib/apiResponse";
+import { getData, postData } from "@/app/API/method";
 import Image from "next/image";
 import BackButton from "@/app/components/BackButton";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+
+const REPORTS_ENDPOINT = "/admin-panel/report/action";
+
+function formatDateDisplay(dateString) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatDateForAPI(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** Normalize API row → table row; keeps ids for POST /admin-panel/report/action */
+function formatReportData(reports) {
+  return reports.map((report) => {
+    const reportId = report.report_id ?? report.id;
+    const userId =
+      report.user_id ??
+      report.reported_user_id ??
+      report.reported_to_id ??
+      (typeof report.reported_to === "object" && report.reported_to !== null
+        ? report.reported_to.id ?? report.reported_to.user_id
+        : null) ??
+      (typeof report.reported_to === "string" && report.reported_to.length >= 20
+        ? report.reported_to
+        : null);
+
+    const reportedToLabel =
+      typeof report.reported_to === "object" && report.reported_to !== null
+        ? report.reported_to.name ??
+          report.reported_to.username ??
+          report.reported_to.email ??
+          "N/A"
+        : report.reported_to_name ??
+          report.reported_to ??
+          "N/A";
+
+    const reportedByLabel =
+      typeof report.reported_by === "object" && report.reported_by !== null
+        ? report.reported_by.name ??
+          report.reported_by.username ??
+          report.reported_by.email ??
+          "N/A"
+        : report.reported_by_name ??
+          report.reported_by ??
+          "N/A";
+
+    return {
+      id: reportId,
+      report_id: reportId,
+      user_id: userId,
+      reportedTo: reportedToLabel,
+      reportedBy: reportedByLabel,
+      description: report.description || "No description",
+      status: report.status || "Pending",
+      reason: report.reason || "No reason specified",
+      createdAt: formatDateDisplay(report.created_at) || "N/A",
+      updatedAt: formatDateDisplay(report.updated_at) || "N/A",
+      raw: report,
+    };
+  });
+}
 
 const ReportedUser = () => {
   // State management
@@ -24,94 +95,53 @@ const ReportedUser = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
   const exportRef = useRef(null);
   const [showExportOptions, setShowExportOptions] = useState(false);
 
-  // API endpoints
-  const API_URL = "/admin-panel/reported/user";
-  const SEARCH_API_URL = "/admin-panel/reported/user/search";
+  const fetchReports = useCallback(
+    async (query, status, date, pageFirst, pageRows) => {
+      try {
+        setLoading(true);
+        const page = Math.floor(pageFirst / pageRows) + 1;
+        const params = new URLSearchParams();
+        params.append("page", String(page));
+        params.append("page_size", String(pageRows));
+        if (query) params.append("search_query", query);
+        if (status !== "All") params.append("report_status", status);
+        if (date) params.append("creation_date", formatDateForAPI(date));
 
-  // Fetch reports with debouncing
-  const debouncedSearch = useCallback(
-    debounce(async (query, status, date) => {
-      await fetchReports(query, status, date);
-    }, 500),
+        const response = await getData(`${REPORTS_ENDPOINT}?${params.toString()}`);
+        const list = extractResultsList(response);
+
+        const count =
+          response?.data?.count ?? response?.count ?? list.length;
+        setTotalRecords(typeof count === "number" ? count : list.length);
+
+        setReports(formatReportData(list));
+        if (list.length === 0 && (query || status !== "All" || date)) {
+          toast.info("No matching reports found");
+        }
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+        toast.error(getApiErrorMessage(error, "Failed to load reports"));
+        setReports([]);
+        setTotalRecords(0);
+      } finally {
+        setLoading(false);
+      }
+    },
     []
   );
 
   useEffect(() => {
-    if (searchQuery || statusFilter !== "All" || dateFilter) {
-      debouncedSearch(searchQuery, statusFilter, dateFilter);
-    } else {
-      fetchReports();
-    }
-  }, [searchQuery, statusFilter, dateFilter]);
-
-  const fetchReports = async (query = "", status = "All", date = "") => {
-    try {
-      setLoading(true);
-      let url = API_URL;
-      const params = new URLSearchParams();
-
-      if (query || status !== "All" || date) {
-        url = SEARCH_API_URL;
-        if (query) params.append('search_query', query);
-        if (status !== "All") params.append('report_status', status);
-        if (date) params.append('creation_date', formatDateForAPI(date));
-      }
-
-      const response = await getData(`${url}?${params.toString()}`);
-      const list = extractResultsList(response);
-
-      if (list.length > 0) {
-        setReports(formatReportData(list));
-      } else {
-        setReports([]);
-        if (query || status !== "All" || date) {
-          toast.info("No matching reports found");
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-      toast.error(error.response?.data?.message || "Failed to load reports");
-      setReports([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Data formatting helpers
-  const formatReportData = (reports) => {
-    return reports.map((report) => ({
-      id: report.id,
-      reportedTo: report.reported_to || "N/A",
-      reportedBy: report.reported_by || "N/A",
-      description: report.description || "No description",
-      status: report.status || "Pending",
-      reason: report.reason || "No reason specified",
-      createdAt: formatDate(report.created_at) || "N/A",
-      updatedAt: formatDate(report.updated_at) || "N/A"
-    }));
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatDateForAPI = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+    const delayMs = searchQuery ? 500 : 0;
+    const timer = setTimeout(() => {
+      fetchReports(searchQuery, statusFilter, dateFilter, first, rows);
+    }, delayMs);
+    return () => clearTimeout(timer);
+  }, [searchQuery, statusFilter, dateFilter, first, rows, fetchReports]);
 
   // Style functions for table headers
   const getHeaderStyle = () => {
@@ -136,20 +166,46 @@ const ReportedUser = () => {
 
   // Event handlers
   const handleSearch = (e) => {
+    setFirst(0);
     setSearchQuery(e.target.value);
   };
 
   const handleDateChange = (e) => {
+    setFirst(0);
     setDateFilter(e.target.value);
   };
 
   const handleStatusChange = (e) => {
+    setFirst(0);
     setStatusFilter(e.target.value);
   };
 
   const onPage = (event) => {
     setFirst(event.first);
     setRows(event.rows);
+  };
+
+  const handleReportAction = async (rowData) => {
+    const rid = rowData.report_id ?? rowData.id;
+    const uid = rowData.user_id;
+    if (rid == null || uid == null || uid === "") {
+      toast.error("Missing report_id or user_id for this report.");
+      return;
+    }
+    try {
+      setActionLoadingId(rowData.id);
+      await postData(REPORTS_ENDPOINT, {
+        report_id: String(rid),
+        user_id: typeof uid === "string" ? uid : String(uid),
+      });
+      toast.success("Action completed successfully");
+      await fetchReports(searchQuery, statusFilter, dateFilter, first, rows);
+    } catch (err) {
+      console.error(err);
+      toast.error(getApiErrorMessage(err, "Failed to complete action"));
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const showReportDetails = (report) => {
@@ -280,13 +336,22 @@ const ReportedUser = () => {
 
   // Table column templates
   const actionBodyTemplate = (rowData) => {
+    const busy = actionLoadingId === rowData.id;
     return (
       <select
-        onChange={(e) => e.target.value === "view" && showReportDetails(rowData)}
-        className="border rounded-md p-1 text-sm"
+        key={`${rowData.id}-${busy ? "1" : "0"}`}
+        disabled={busy}
+        defaultValue=""
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "view") showReportDetails(rowData);
+          if (v === "action") void handleReportAction(rowData);
+        }}
+        className="border rounded-md p-1 text-sm max-w-[11rem]"
       >
         <option value="">Actions</option>
         <option value="view">View Details</option>
+        <option value="action">Take action</option>
       </select>
     );
   };
@@ -382,7 +447,11 @@ const ReportedUser = () => {
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                type="button"
+                onClick={() => {
+                  setFirst(0);
+                  setSearchQuery("");
+                }}
                 className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
                 ×
@@ -401,7 +470,11 @@ const ReportedUser = () => {
             />
             {dateFilter && (
               <button
-                onClick={() => setDateFilter("")}
+                type="button"
+                onClick={() => {
+                  setFirst(0);
+                  setDateFilter("");
+                }}
                 className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
                 ×
@@ -419,13 +492,14 @@ const ReportedUser = () => {
         <div className="card table-scroll-wrapper">
           <DataTable
             value={reports}
+            lazy
             paginator
             first={first}
             rows={rows}
+            totalRecords={totalRecords}
             onPage={onPage}
             scrollHeight="400px"
-            //rowsPerPageOptions={[5, 10, 20, 50]}
-            //paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+            rowsPerPageOptions={[5, 10, 20, 50]}
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
             tableStyle={{ minWidth: "100rem" }}
             className="custom-paginator"

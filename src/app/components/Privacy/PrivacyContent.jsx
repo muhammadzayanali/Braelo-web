@@ -26,62 +26,6 @@ const PrivacyContent = () => {
             this Site, to understand our practices.
           </p>
         </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>{" "}
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>{" "}
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
-        <div className="px-10 pt-10">
-          <p className="text-gray-500 font-extrabold text-lg">2. PRIVACY</p>
-          <p className="mt-4 text-gray-500 text-base">
-            Please review our Privacy Policy, which also governs your visit to
-            this Site, to understand our practices.
-          </p>
-        </div>
       </div>
 
       <div className="mt-5 flex justify-end  w-11/12">

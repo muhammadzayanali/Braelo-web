@@ -82,23 +82,29 @@ const NotificationsList = () => {
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="bg-white p-4 rounded-lg shadow-md flex justify-between items-start"
+                className="bg-white p-4 rounded-lg shadow-md flex justify-between items-start gap-4 overflow-hidden"
               >
-                <div className="flex items-center space-x-4">
+                <div className="flex min-w-0 flex-1 items-start gap-4">
                   <Image
                     src={notification.image}
                     alt="Notification"
-                    className="rounded"
+                    className="rounded shrink-0"
                     width={48}
                     height={48}
                   />
-                  <div>
-                    <h3 className="text-lg font-semibold">{notification.title}</h3>
-                    <p className="text-sm text-gray-600">{notification.message}</p>
-                    <p className="text-xs text-gray-500">{notification.description}</p>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <h3 className="text-lg font-semibold break-words">
+                      {notification.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 break-words [overflow-wrap:anywhere]">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
+                      {notification.description}
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end">
+                <div className="flex shrink-0 flex-col items-end">
                   <p className="text-xs text-gray-500">
                     {formatDate(notification.dateReceived)}
                   </p>
